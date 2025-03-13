@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Haawa au - المتجر</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+      --primary: #000E0F; 
+      --secondary: #001F23; 
+      --accent: #00333A; 
+      --light: #004047; 
+      --header-light: #001A1F;
+      --text: #F5F5F5; 
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Tajawal', sans-serif; 
+      background: var(--primary); 
+      color: var(--text); 
+      direction: rtl; 
+      min-height: 100vh;
+      touch-action: manipulation;
+    }
+    .navbar { 
+      background: var(--header-light); 
+      padding: 1rem; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); 
+    }
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+    }
+    .navbar img { 
+      width: 60px; 
+      height: 40px;
+      border-radius: 10px; 
+      margin-left: 10px; 
+      object-fit: cover;
+      border: 2px solid var(--light);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+    }
+    .navbar img:hover {
+      transform: scale(1.05);
+    }
+    .navbar .caption { 
+      font-size: 16px; 
+      color: var(--text); 
+      font-weight: 500; 
+    }
+    .menu-icon {
+      color: var(--text);
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .banner-container { 
+      max-width: 1024px; 
+      margin: 20px auto; 
+      padding: 0 15px; 
+      overflow: hidden;
+    }
+    .banners { 
+      position: relative; 
+      border-radius: 15px;
+      overflow: hidden;
+      aspect-ratio: 2400/660;
+      max-height: 400px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    .banners-wrapper {
+      display: flex;
+      transition: transform 0.5s ease;
+      height: 100%;
+    }
+    .banner-slide {
+      min-width: 100%;
+      height: 100%;
+    }
+    .banners img { 
+      width: 100%; 
+      height: 100%;
+      object-fit: cover;
+    }
+    .banner-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+    .banner-dot {
+      width: 12px;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .banner-dot.active {
+      background: #fff;
+    }
+    .banner-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.4);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      z-index: 10;
+    }
+    .banner-prev {
+      left: 15px;
+    }
+    .banner-next {
+      right: 15px;
+    }
+    .products { 
+      padding: 30px 15px; 
+      display: grid; 
+      gap: 30px; 
+      justify-content: center; 
+    }
+    .product-row { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+      gap: 30px; 
+      max-width: 1200px; 
+      margin: 0 auto;
+    }
+    .product-box { 
+      background: var(--secondary); 
+      border-radius: 25px; 
+      padding: 25px; 
+      text-align: center; 
+      cursor: pointer; 
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); 
+      transition: all 0.4s ease; 
+      border: 2px solid transparent; 
+    }
+    .product-box:hover { 
+      transform: translateY(-12px); 
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25); 
+      border-color: var(--light); 
+    }
+    .product-box img { 
+      width: 110px; 
+      height: 110px; 
+      object-fit: contain; 
+      border-radius: 50%; 
+      background: var(--accent); 
+      padding: 10px; 
+      transition: transform 0.4s ease; 
+    }
+    .product-box:hover img { transform: scale(1.1); }
+    .product-box h3 { 
+      font-size: 16px; 
+      margin: 15px 0 10px; 
+      color: var(--text); 
+      font-weight: 500; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+    }
+    .price { display: flex; justify-content: center; gap: 8px; margin: 12px 0; }
+    .price .old-price { text-decoration: line-through; color: #b8b8b8; font-size: 14px; }
+    .price .new-price { color: #a2d2db; font-weight: bold; font-size: 18px; }
+    .add-to-cart { 
+      background: linear-gradient(135deg, var(--light), var(--accent)); 
+      border-radius: 12px; 
+      padding: 12px; 
+      color: #fff; 
+      text-decoration: none; 
+      font-size: 14px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      transition: all 0.4s ease; 
+    }
+    .add-to-cart:hover { 
+      background: linear-gradient(135deg, var(--accent), var(--light)); 
+      transform: translateY(-2px); 
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); 
+    }
+    .add-to-cart i { margin-left: 6px; }
+    .modal { 
+      display: none; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0, 0, 0, 0.8); 
+      z-index: 2000; 
+      padding: 20px; 
+      overflow-y: auto; 
+    }
+    .modal-content { 
+      background: var(--secondary); 
+      margin: 10% auto; 
+      padding: 25px; 
+      border-radius: 15px; 
+      max-width: 600px; 
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3); 
+    }
+    .modal .close { 
+      float: left; 
+      font-size: 30px; 
+      color: #aaa; 
+      cursor: pointer; 
+      transition: color 0.3s; 
+    }
+    .modal .close:hover { color: #fff; }
+    .modal img { 
+      width: 100%; 
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 10px; 
+    }
+    .modal h2 { margin: 15px 0; color: var(--text); font-size: 20px; }
+    .modal p { color: #ddd; font-size: 14px; line-height: 1.6; }
+    .modal .modal-add-to-cart { 
+      background: var(--light); 
+      border-radius: 8px; 
+      padding: 12px; 
+      color: #fff; 
+      text-decoration: none; 
+      display: block; 
+      text-align: center; 
+      margin-top: 15px; 
+      transition: background 0.3s; 
+    }
+    .modal .modal-add-to-cart:hover { background: var(--accent); }
+    
+    @media (max-width: 768px) {
+      .product-row { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+      .modal-content { margin: 5% auto; padding: 15px; }
+      .banners { aspect-ratio: 2400/660; max-height: 300px; }
+    }
+    
+    @media (max-width: 480px) {
+      .product-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+      .product-box { padding: 15px; }
+      .product-box img { width: 90px; height: 90px; }
+      .navbar { padding: 0.8rem; }
+      .navbar img { width: 50px; height: 35px; }
+      .banner-nav { width: 30px; height: 30px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="navbar-brand">
+      <img id="navbarLogo" src="https://i.postimg.cc/QCtCTctL/IMG.jpg" alt="الشعار">
+      <div class="caption">Haawa au</div>
+    </div>
+    <div class="menu-icon">
+      <i class="fas fa-ellipsis-v"></i>
+    </div>
+  </div>
+  
+  <div class="banner-container">
+    <div id="bannersCarousel" class="banners">
+      <div class="banners-wrapper" id="bannersWrapper"></div>
+      <button class="banner-nav banner-prev">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <button class="banner-nav banner-next">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="banner-controls" id="bannerControls"></div>
+    </div>
+  </div>
+  
+  <div class="products" id="productsContainer"></div>
+  
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <span class="close" aria-label="إغلاق">&times;</span>
+      <img id="modalProductImage" src="" alt="صورة المنتج">
+      <h2 id="modalProductTitle"></h2>
+      <p id="modalProductDescription"></p>
+      <div class="price">
+        <span class="old-price" id="modalOldPrice"></span>
+        <span class="new-price" id="modalNewPrice"></span>
+      </div>
+      <a id="modalAddToCartLink" href="#" class="modal-add-to-cart">
+        <i class="fas fa-shopping-cart"></i> أضف للسلة
+      </a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA4JLZsImCMDKGuMo_0-2izcqiwyiYBMBo",
+      authDomain: "maawaau.firebaseapp.com",
+      projectId: "maawaau",
+      storageBucket: "maawaau.firebaseestorage.app",
+      messagingSenderId: "1098534875401",
+      appId: "1:1098534875401:web:c299126a5786c353b2a3d8"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let currentBannerIndex = 0;
+    let bannerCount = 0;
+    let autoSlideInterval;
+
+    const loadBanners = () => {
+      const wrapper = document.getElementById('bannersWrapper');
+      const controls = document.getElementById('bannerControls');
+      wrapper.innerHTML = '<div class="banner-slide"><p style="text-align: center; padding: 20px;">جارٍ التحميل...</p></div>';
+      
+      onValue(ref(db, 'banners'), (snapshot) => {
+        const banners = snapshot.val() || [];
+        bannerCount = banners.length;
+        
+        if (banners.length) {
+          wrapper.innerHTML = '';
+          controls.innerHTML = '';
+          
+          banners.forEach((banner, index) => {
+            // Create banner slide
+            const slide = document.createElement('div');
+            slide.className = 'banner-slide';
+            slide.innerHTML = `<a href="${banner.link || '#'}" target="_blank"><img src="${banner.url}" alt="بانر ${index + 1}" loading="lazy"></a>`;
+            wrapper.appendChild(slide);
+            
+            // Create dot control
+            const dot = document.createElement('div');
+            dot.className = 'banner-dot' + (index === 0 ? ' active' : '');
+            dot.addEventListener('click', () => goToBanner(index));
+            controls.appendChild(dot);
+          });
+          
+          startAutoSlide();
+        } else {
+          wrapper.innerHTML = '<div class="banner-slide"><p style="text-align: center; padding: 20px;">لا توجد بانرات</p></div>';
+          controls.innerHTML = '';
+        }
+      }, (error) => {
+        console.error('Error fetching banners:', error);
+        wrapper.innerHTML = '<div class="banner-slide"><p style="text-align: center; padding: 20px;">خطأ في تحميل البانرات</p></div>';
+      });
+    };
+
+    const goToBanner = (index) => {
+      currentBannerIndex = index;
+      document.getElementById('bannersWrapper').style.transform = `translateX(${index * 100}%)`;
+      
+      // Update dots
+      const dots = document.querySelectorAll('.banner-dot');
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+      });
+      
+      // Reset timer
+      clearInterval(autoSlideInterval);
+      startAutoSlide();
+    };
+    
+    const nextBanner = () => {
+      if (bannerCount > 0) {
+        currentBannerIndex = (currentBannerIndex + 1) % bannerCount;
+        goToBanner(currentBannerIndex);
+      }
+    };
+    
+    const prevBanner = () => {
+      if (bannerCount > 0) {
+        currentBannerIndex = (currentBannerIndex - 1 + bannerCount) % bannerCount;
+        goToBanner(currentBannerIndex);
+      }
+    };
+    
+    const startAutoSlide = () => {
+      if (bannerCount > 1) {
+        autoSlideInterval = setInterval(nextBanner, 3000);
+      }
+    };
+
+    const loadProducts = () => {
+      const container = document.getElementById('productsContainer');
+      container.innerHTML = '<p style="text-align: center;">جارٍ التحميل...</p>';
+      
+      onValue(ref(db, 'products'), (snapshot) => {
+        container.innerHTML = '';
+        const products = snapshot.val() || {};
+        
+        if (Object.keys(products).length === 0) {
+          container.innerHTML = '<p style="text-align: center;">لا توجد منتجات</p>';
+          return;
+        }
+        
+        const row = document.createElement('div');
+        row.className = 'product-row';
+        
+        Object.values(products).forEach(product => {
+          const box = document.createElement('div');
+          box.className = 'product-box';
+          box.innerHTML = `
+            <img src="${product.image || ''}" alt="${product.title || 'منتج'}" loading="lazy">
+            <h3>${product.title || 'بدون عنوان'}</h3>
+            <div class="price">
+              <span class="old-price">${product.oldPrice || ''}</span>
+              <span class="new-price">${product.newPrice || ''}</span>
+            </div>
+            <a href="https://wa.me/${product.whatsappLink || ''}?text=${encodeURIComponent(product.whatsappMessage || '')}" class="add-to-cart">
+              <i class="fas fa-shopping-cart"></i> أضف للسلة
+            </a>
+          `;
+          box.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'A' && !e.target.closest('a')) {
+              showProductModal(product);
+            }
+          });
+          row.appendChild(box);
+        });
+        container.appendChild(row);
+      }, (error) => {
+        console.error('Error fetching products:', error);
+        container.innerHTML = '<p style="text-align: center;">خطأ في تحميل المنتجات</p>';
+      });
+    };
+
+    const showProductModal = (product) => {
+      const modal = document.getElementById('productModal');
+      document.getElementById('modalProductImage').src = product.image || '';
+      document.getElementById('modalProductTitle').textContent = product.title || 'بدون عنوان';
+      document.getElementById('modalProductDescription').textContent = product.description || 'لا يوجد وصف';
+      document.getElementById('modalOldPrice').textContent = product.oldPrice || '';
+      document.getElementById('modalNewPrice').textContent = product.newPrice || '';
+      document.getElementById('modalAddToCartLink').href = `https://wa.me/${product.whatsappLink || ''}?text=${encodeURIComponent(product.whatsappMessage || '')}`;
+      modal.style.display = 'block';
+    };
+
+    // Event listeners
+    document.querySelector('.modal .close').addEventListener('click', () => {
+      document.getElementById('productModal').style.display = 'none';
+    });
+    
+    window.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('productModal')) {
+        document.getElementById('productModal').style.display = 'none';
+      }
+    });
+    
+    document.querySelector('.banner-next').addEventListener('click', () => {
+      clearInterval(autoSlideInterval);
+      nextBanner();
+    });
+    
+    document.querySelector('.banner-prev').addEventListener('click', () => {
+      clearInterval(autoSlideInterval);
+      prevBanner();
+    });
+
+    window.addEventListener('load', () => {
+      document.getElementById('navbarLogo').src = localStorage.getItem('navbarLogo') || 'https://i.postimg.cc/QCtCTctL/IMG.jpg';
+      loadBanners();
+      loadProducts();
+    });
+    
+    // Touch events for banner swiping
+    let touchStartX = 0;
+    const bannersEl = document.getElementById('bannersCarousel');
+    
+    bannersEl.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      clearInterval(autoSlideInterval);
+    }, { passive: true });
+    
+    bannersEl.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchEndX - touchStartX;
+      
+      if (diff > 50) { // Swipe right
+        prevBanner();
+      } else if (diff < -50) { // Swipe left
+        nextBanner();
+      } else {
+        startAutoSlide();
+      }
+    }, { passive: true });
+  </script>
+</body>
+        </html>
