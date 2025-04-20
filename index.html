@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Haawa au - المتجر</title>
+  <title>Haawa au</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -137,8 +137,8 @@
     }
     .product-row { 
       display: grid; 
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
-      gap: 30px; 
+      grid-template-columns: repeat(2, 1fr); 
+      gap: 15px; 
       max-width: 1200px; 
       margin: 0 auto;
     }
@@ -246,14 +246,74 @@
     }
     .modal .modal-add-to-cart:hover { background: var(--accent); }
     
+    /* صفحة البحث */
+    .search-page {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--primary);
+      z-index: 3000;
+      display: none;
+      flex-direction: column;
+    }
+    .search-header {
+      background: var(--header-light);
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    .search-header .back-button {
+      color: var(--text);
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .search-header .title {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .search-input-container {
+      padding: 15px;
+      background: var(--header-light);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .search-input {
+      width: 100%;
+      background: var(--secondary);
+      border: none;
+      border-radius: 20px;
+      padding: 12px 20px;
+      color: var(--text);
+      font-family: 'Tajawal', sans-serif;
+      font-size: 16px;
+    }
+    .search-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .search-results {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+    }
+    .no-results {
+      text-align: center;
+      color: #b8b8b8;
+      margin-top: 50px;
+      font-size: 16px;
+    }
+    
     @media (max-width: 768px) {
-      .product-row { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+      .product-box { padding: 20px; }
       .modal-content { margin: 5% auto; padding: 15px; }
       .banners { aspect-ratio: 2400/660; max-height: 300px; }
     }
     
     @media (max-width: 480px) {
-      .product-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
       .product-box { padding: 15px; }
       .product-box img { width: 90px; height: 90px; }
       .navbar { padding: 0.8rem; }
@@ -268,8 +328,8 @@
       <img id="navbarLogo" src="https://i.postimg.cc/QCtCTctL/IMG.jpg" alt="الشعار">
       <div class="caption">Haawa au</div>
     </div>
-    <div class="menu-icon">
-      <i class="fas fa-ellipsis-v"></i>
+    <div class="menu-icon" id="searchButton">
+      <i class="fas fa-search"></i>
     </div>
   </div>
   
@@ -304,6 +364,22 @@
     </div>
   </div>
 
+  <!-- صفحة البحث -->
+  <div class="search-page" id="searchPage">
+    <div class="search-header">
+      <div class="back-button" id="searchBackButton">
+        <i class="fas fa-arrow-right"></i>
+      </div>
+      <div class="title">البحث</div>
+    </div>
+    <div class="search-input-container">
+      <input type="text" class="search-input" id="searchInput" placeholder="ابحث عن التطبيق..." autocomplete="off">
+    </div>
+    <div class="search-results" id="searchResults">
+      <div class="no-results">اكتب في حقل البحث للعثور على التطبيقات</div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
@@ -323,7 +399,9 @@
     let currentBannerIndex = 0;
     let bannerCount = 0;
     let autoSlideInterval;
+    let allProducts = [];
 
+    // تحميل البانرات
     const loadBanners = () => {
       const wrapper = document.getElementById('bannersWrapper');
       const controls = document.getElementById('bannerControls');
@@ -338,13 +416,13 @@
           controls.innerHTML = '';
           
           banners.forEach((banner, index) => {
-            // Create banner slide
+            // إنشاء شريحة البانر
             const slide = document.createElement('div');
             slide.className = 'banner-slide';
             slide.innerHTML = `<a href="${banner.link || '#'}" target="_blank"><img src="${banner.url}" alt="بانر ${index + 1}" loading="lazy"></a>`;
             wrapper.appendChild(slide);
             
-            // Create dot control
+            // إنشاء نقاط التحكم
             const dot = document.createElement('div');
             dot.className = 'banner-dot' + (index === 0 ? ' active' : '');
             dot.addEventListener('click', () => goToBanner(index));
@@ -366,13 +444,13 @@
       currentBannerIndex = index;
       document.getElementById('bannersWrapper').style.transform = `translateX(${index * 100}%)`;
       
-      // Update dots
+      // تحديث النقاط
       const dots = document.querySelectorAll('.banner-dot');
       dots.forEach((dot, i) => {
         dot.classList.toggle('active', i === index);
       });
       
-      // Reset timer
+      // إعادة ضبط المؤقت
       clearInterval(autoSlideInterval);
       startAutoSlide();
     };
@@ -397,6 +475,7 @@
       }
     };
 
+    // تحميل المنتجات
     const loadProducts = () => {
       const container = document.getElementById('productsContainer');
       container.innerHTML = '<p style="text-align: center;">جارٍ التحميل...</p>';
@@ -404,41 +483,58 @@
       onValue(ref(db, 'products'), (snapshot) => {
         container.innerHTML = '';
         const products = snapshot.val() || {};
+        allProducts = Object.values(products);
         
-        if (Object.keys(products).length === 0) {
+        if (allProducts.length === 0) {
           container.innerHTML = '<p style="text-align: center;">لا توجد منتجات</p>';
           return;
         }
         
-        const row = document.createElement('div');
-        row.className = 'product-row';
-        
-        Object.values(products).forEach(product => {
-          const box = document.createElement('div');
-          box.className = 'product-box';
-          box.innerHTML = `
-            <img src="${product.image || ''}" alt="${product.title || 'منتج'}" loading="lazy">
-            <h3>${product.title || 'بدون عنوان'}</h3>
-            <div class="price">
-              <span class="old-price">${product.oldPrice || ''}</span>
-              <span class="new-price">${product.newPrice || ''}</span>
-            </div>
-            <a href="https://wa.me/${product.whatsappLink || ''}?text=${encodeURIComponent(product.whatsappMessage || '')}" class="add-to-cart">
-              <i class="fas fa-shopping-cart"></i> أضف للسلة
-            </a>
-          `;
-          box.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'A' && !e.target.closest('a')) {
-              showProductModal(product);
-            }
-          });
-          row.appendChild(box);
-        });
-        container.appendChild(row);
+        // إنشاء صفوف المنتجات بنمط 2 في كل صف
+        for (let i = 0; i < allProducts.length; i += 2) {
+          const row = document.createElement('div');
+          row.className = 'product-row';
+          
+          // المنتج الأول في الصف
+          if (allProducts[i]) {
+            const product1 = createProductBox(allProducts[i]);
+            row.appendChild(product1);
+          }
+          
+          // المنتج الثاني في الصف
+          if (allProducts[i+1]) {
+            const product2 = createProductBox(allProducts[i+1]);
+            row.appendChild(product2);
+          }
+          
+          container.appendChild(row);
+        }
       }, (error) => {
         console.error('Error fetching products:', error);
         container.innerHTML = '<p style="text-align: center;">خطأ في تحميل المنتجات</p>';
       });
+    };
+    
+    const createProductBox = (product) => {
+      const box = document.createElement('div');
+      box.className = 'product-box';
+      box.innerHTML = `
+        <img src="${product.image || ''}" alt="${product.title || 'منتج'}" loading="lazy">
+        <h3>${product.title || 'بدون عنوان'}</h3>
+        <div class="price">
+          <span class="old-price">${product.oldPrice || ''}</span>
+          <span class="new-price">${product.newPrice || ''}</span>
+        </div>
+        <a href="https://wa.me/${product.whatsappLink || ''}?text=${encodeURIComponent(product.whatsappMessage || '')}" class="add-to-cart">
+          <i class="fas fa-shopping-cart"></i> أضف للسلة
+        </a>
+      `;
+      box.addEventListener('click', (e) => {
+        if (e.target.tagName !== 'A' && !e.target.closest('a')) {
+          showProductModal(product);
+        }
+      });
+      return box;
     };
 
     const showProductModal = (product) => {
@@ -452,7 +548,71 @@
       modal.style.display = 'block';
     };
 
-    // Event listeners
+    // إدارة البحث
+    const setupSearch = () => {
+      const searchInput = document.getElementById('searchInput');
+      const searchResults = document.getElementById('searchResults');
+      
+      searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.trim().toLowerCase();
+        
+        if (searchTerm.length === 0) {
+          searchResults.innerHTML = '<div class="no-results">اكتب في حقل البحث للعثور على التطبيقات</div>';
+          return;
+        }
+        
+        const filteredProducts = allProducts.filter(product => 
+          (product.title && product.title.toLowerCase().includes(searchTerm)) ||
+          (product.description && product.description.toLowerCase().includes(searchTerm))
+        );
+        
+        displaySearchResults(filteredProducts);
+      });
+    };
+    
+    const displaySearchResults = (products) => {
+      const searchResults = document.getElementById('searchResults');
+      
+      if (products.length === 0) {
+        searchResults.innerHTML = '<div class="no-results">لا توجد نتائج مطابقة للبحث</div>';
+        return;
+      }
+      
+      searchResults.innerHTML = '';
+      
+      // إنشاء صفوف المنتجات بنمط 2 في كل صف
+      for (let i = 0; i < products.length; i += 2) {
+        const row = document.createElement('div');
+        row.className = 'product-row';
+        
+        // المنتج الأول في الصف
+        if (products[i]) {
+          const product1 = createProductBox(products[i]);
+          row.appendChild(product1);
+        }
+        
+        // المنتج الثاني في الصف
+        if (products[i+1]) {
+          const product2 = createProductBox(products[i+1]);
+          row.appendChild(product2);
+        }
+        
+        searchResults.appendChild(row);
+      }
+    };
+
+    // مستمعي الأحداث
+    document.getElementById('searchButton').addEventListener('click', () => {
+      document.getElementById('searchPage').style.display = 'flex';
+      document.getElementById('searchInput').focus();
+    });
+    
+    document.getElementById('searchBackButton').addEventListener('click', () => {
+      document.getElementById('searchPage').style.display = 'none';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchResults').innerHTML = '<div class="no-results">اكتب في حقل البحث للعثور على التطبيقات</div>';
+    });
+    
     document.querySelector('.modal .close').addEventListener('click', () => {
       document.getElementById('productModal').style.display = 'none';
     });
@@ -477,9 +637,10 @@
       document.getElementById('navbarLogo').src = localStorage.getItem('navbarLogo') || 'https://i.postimg.cc/QCtCTctL/IMG.jpg';
       loadBanners();
       loadProducts();
+      setupSearch();
     });
     
-    // Touch events for banner swiping
+    // أحداث اللمس لتمرير البانرات
     let touchStartX = 0;
     const bannersEl = document.getElementById('bannersCarousel');
     
@@ -492,9 +653,9 @@
       const touchEndX = e.changedTouches[0].clientX;
       const diff = touchEndX - touchStartX;
       
-      if (diff > 50) { // Swipe right
+      if (diff > 50) { // تمرير لليمين
         prevBanner();
-      } else if (diff < -50) { // Swipe left
+      } else if (diff < -50) { // تمرير لليسار
         nextBanner();
       } else {
         startAutoSlide();
@@ -502,4 +663,4 @@
     }, { passive: true });
   </script>
 </body>
-        </html>
+  </html>
