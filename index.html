@@ -1112,4 +1112,152 @@
         deleteConfirmationDialog.style.display = 'none';
     };
 
-    confirmDeleteBtn
+    confirmDeleteBtn.addEventListener('click', () => {
+        if (messageToDeleteId && currentUser.currentRoomId) {
+            const messageRef = ref(db, `rooms/${currentUser.currentRoomId}/messages/${messageToDeleteId}`);
+            remove(messageRef)
+                .then(() => {
+                    console.log("Message deleted successfully:", messageToDeleteId);
+                    hideDeleteConfirmation();
+                    // Message removal from UI handled by the onValue listener
+                })
+                .catch((error) => {
+                    console.error("Error deleting message:", error);
+                    alert("خطأ في حذف الرسالة.");
+                    hideDeleteConfirmation();
+                });
+        } else {
+             console.error("Cannot delete: Missing message ID or Room ID");
+              hideDeleteConfirmation();
+        }
+    });
+
+    cancelDeleteBtn.addEventListener('click', hideDeleteConfirmation);
+    // Close dialog if clicking outside the box
+     deleteConfirmationDialog.addEventListener('click', (e) => {
+        if (e.target === deleteConfirmationDialog) {
+            hideDeleteConfirmation();
+        }
+    });
+
+
+    // --- Send Message ---
+    const sendMessage = () => {
+        const messageText = chatInput.value.trim();
+        if (messageText === '' || !currentUser.currentRoomId || !currentUser.name) return;
+
+        const roomId = currentUser.currentRoomId;
+        const messagesRef = ref(db, `rooms/${roomId}/messages`);
+        const newMessageRef = push(messagesRef);
+
+        const newMessage = {
+            sender: currentUser.name,
+            avatar: currentUser.avatar,
+            color: currentUser.color,
+            text: messageText,
+            timestamp: serverTimestamp()
+        };
+
+        // Add reply context if present
+        if (replyToMessage) {
+            newMessage.replyTo = {
+                 // Store only essential info to avoid bloating DB
+                id: replyToMessage.id,
+                sender: replyToMessage.sender,
+                text: replyToMessage.text.substring(0, 50) + (replyToMessage.text.length > 50 ? '...' : '') // Store snippet
+            };
+        }
+
+        set(newMessageRef, newMessage)
+            .then(() => {
+                chatInput.value = '';
+                adjustTextareaHeight();
+                cancelReply(); // Clear reply state after sending
+                scrollToBottom();
+            })
+            .catch((error) => {
+                console.error('Error sending message:', error);
+                alert('حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.');
+            });
+    };
+
+    // --- Utility Functions ---
+    const formatTime = (timestamp) => {
+        if (!timestamp) return '';
+        try {
+            const date = new Date(timestamp);
+            if (isNaN(date.getTime())) { return "---"; }
+            return date.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit', hour12: true });
+        } catch (e) {
+            console.error("Error formatting time:", e, "Timestamp:", timestamp);
+            return "---";
+        }
+    };
+
+    const adjustTextareaHeight = () => {
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
+       // Adjust padding of the container based on input height - optional visual improvement
+       chatInputArea.style.paddingBottom = `${12 + (chatInput.offsetHeight - 20)}px`; // Base padding + extra height
+    };
+
+    const scrollToBottom = (immediate = false) => {
+        if (immediate) {
+            chatContent.scrollTop = chatContent.scrollHeight;
+        } else {
+             setTimeout(() => {
+                chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
+             }, 50); // Delay allows DOM to update for smooth scroll
+        }
+    };
+
+
+    // --- Event Listeners ---
+    bannerControls.addEventListener('click', (e) => {
+      if (e.target.classList.contains('banner-dot')) {
+        goToBanner(parseInt(e.target.dataset.index, 10));
+      }
+    });
+    document.querySelector('.banner-next').addEventListener('click', nextBanner);
+    document.querySelector('.banner-prev').addEventListener('click', prevBanner);
+
+    chatBackButton.addEventListener('click', leaveChatRoom);
+    sendButton.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+       // Allow cancelling reply with Escape key
+        if (e.key === 'Escape' && replyToMessage) {
+            cancelReply();
+        }
+    });
+    chatInput.addEventListener('input', adjustTextareaHeight);
+
+    // Touch events for banners
+    let bannerTouchStartX = 0;
+    const bannersEl = document.getElementById('bannersCarousel');
+    bannersEl.addEventListener('touchstart', (e) => {
+      bannerTouchStartX = e.touches[0].clientX;
+      clearInterval(autoSlideInterval);
+    }, { passive: true });
+    bannersEl.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchEndX - bannerTouchStartX;
+      if (diff > 50) { prevBanner(); }
+      else if (diff < -50) { nextBanner(); }
+      resetAutoSlide(); // Always reset timer after interaction
+    }, { passive: true });
+
+
+    // --- Initial Load ---
+    window.addEventListener('load', () => {
+      loadBanners();
+      loadRooms();
+      adjustTextareaHeight();
+    });
+
+  </script>
+</body>
+</html>
