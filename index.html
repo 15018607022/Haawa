@@ -1,555 +1,1249 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Haawa au - غرف الدردشة</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #000E0F;
-      --secondary: #001F23;
-      --accent: #00333A;
-      --light: #004047;
-      --header-light: #001A1F;
-      --text: #F5F5F5;
-      --bubble-red: #4d0f0f;
-      --bubble-red-border: #8b1a1a;
-      --bubble-blue: #0f2b4d;
-      --bubble-blue-border: #1a4f8b;
-      --bubble-green: #104d0f;
-      --bubble-green-border: #1e8b1a;
-      --bubble-gold: #614a0a;
-      --bubble-gold-border: #b48613;
-      --bubble-orange: #61350a;
-      --bubble-orange-border: #b46013;
-      --bubble-default: var(--accent); /* لون افتراضي */
-      --bubble-default-border: var(--light);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Tajawal', sans-serif;
-      background: var(--primary);
-      color: var(--text);
-      direction: rtl;
-      min-height: 100vh;
-      touch-action: manipulation; /* Helps prevent accidental browser gestures */
-      overflow-x: hidden; /* Prevent horizontal scroll */
-    }
-    .navbar {
-      background: var(--header-light);
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      transition: background-color 0.3s ease; /* Added transition */
-    }
-    .navbar-brand { display: flex; align-items: center; }
-    .navbar img {
-      width: 60px; height: 40px; border-radius: 10px;
-      margin-left: 10px; object-fit: cover; border: 2px solid var(--light);
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); transition: transform 0.3s ease;
-    }
-    .navbar img:hover { transform: scale(1.05); }
-    .navbar .caption { font-size: 16px; color: var(--text); font-weight: 500; }
-
-    /* --- Profile Icon --- */
-    .profile-icon-wrapper {
-        position: relative;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .profile-icon {
-      color: var(--text);
-      font-size: 22px;
-      cursor: pointer;
-      position: relative;
-      z-index: 2;
-      transition: color 0.3s ease; /* Added transition */
-    }
-    .profile-icon:hover {
-        color: var(--light); /* Slight hover effect */
-    }
-
-    .banner-container { max-width: 1024px; margin: 20px auto; padding: 0 15px; overflow: hidden; }
-    .banners { position: relative; border-radius: 15px; overflow: hidden; aspect-ratio: 2400/660; max-height: 400px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); }
-    .banners-wrapper { display: flex; transition: transform 0.5s ease; height: 100%; }
-    .banner-slide { min-width: 100%; height: 100%; }
-    .banners img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .banner-controls { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 5; /* Ensure dots are above image */ }
-    .banner-dot { width: 12px; height: 12px; background: rgba(255, 255, 255, 0.5); border-radius: 50%; cursor: pointer; transition: background-color 0.3s ease; /* Added transition */ }
-    .banner-dot.active { background: #fff; }
-    .banner-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.4); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; z-index: 10; transition: background-color 0.3s ease; /* Added transition */ }
-    .banner-nav:hover { background: rgba(0, 0, 0, 0.6); }
-    .banner-prev { left: 15px; }
-    .banner-next { right: 15px; }
-
-    /* --- غرف الدردشة --- */
-    .rooms-section { padding: 30px 15px; }
-    .rooms-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 25px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .room-box {
-      background: var(--secondary);
-      border-radius: 15px;
-      overflow: hidden;
-      text-align: center;
-      cursor: pointer;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
-      border: 2px solid transparent;
-      display: flex;
-      flex-direction: column;
-      aspect-ratio: 1 / 1;
-    }
-    .room-box:hover {
-      transform: translateY(-8px) scale(1.02); /* Slight scale on hover */
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-      border-color: var(--light);
-    }
-    .room-box .room-image-container {
-        flex-grow: 1;
-        overflow: hidden;
-        width: 100%;
-        background-color: var(--accent);
-    }
-    .room-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: transform 0.4s ease;
-    }
-    .room-box:hover img { transform: scale(1.05); }
-    .room-box h3 {
-      font-size: 15px;
-      padding: 12px 10px;
-      color: var(--text);
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      background: var(--secondary);
-      margin: 0;
-    }
-
-    /* --- Modal (Entry Form) --- */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 2000; padding: 20px; overflow-y: auto; animation: fadeIn 0.3s ease-out; }
-    .modal-content { background: var(--secondary); margin: 8% auto; padding: 30px; border-radius: 15px; max-width: 450px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3); position: relative; animation: slideIn 0.4s ease-out; }
-    .modal .close { position: absolute; top: 10px; left: 15px; font-size: 30px; color: #aaa; cursor: pointer; transition: color 0.3s, transform 0.3s ease; line-height: 1; }
-    .modal .close:hover { color: #fff; transform: rotate(90deg); }
-    .modal h2 { margin-bottom: 25px; color: var(--text); font-size: 20px; text-align: center; }
-    .modal label { display: block; margin-bottom: 8px; color: #ddd; font-size: 14px; }
-    .modal input[type="text"] {
-        width: 100%; padding: 12px; border: 1px solid var(--accent); background: var(--primary); border-radius: 8px; color: var(--text); font-size: 15px; margin-bottom: 15px;
-        font-family: 'Tajawal', sans-serif; transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Added transition */
-    }
-     .modal input[type="text"]:focus { outline: none; border-color: var(--light); box-shadow: 0 0 0 3px rgba(0, 64, 71, 0.5); /* Adjusted focus */ }
-    .modal .options-container { margin-bottom: 20px; }
-    .modal .avatar-options, .modal .color-options { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 5px; }
-    .modal input[type="radio"] { display: none; }
-    .modal .avatar-label, .modal .color-label { cursor: pointer; padding: 8px; border-radius: 8px; border: 2px solid transparent; transition: all 0.2s ease; }
-    .modal .avatar-label { font-size: 24px; background-color: var(--accent); line-height: 1; padding: 5px 8px; }
-    .modal .color-label { width: 35px; height: 35px; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
-    .modal input[type="radio"]:checked + label { border-color: #a2d2db; transform: scale(1.15); /* Slightly more scale */ box-shadow: 0 0 10px rgba(162, 210, 219, 0.8); /* Brighter shadow */ }
-    /* Specific color styles */
-    .modal .color-label[for="color-red"] { background-color: var(--bubble-red); }
-    .modal .color-label[for="color-blue"] { background-color: var(--bubble-blue); }
-    .modal .color-label[for="color-green"] { background-color: var(--bubble-green); }
-    .modal .color-label[for="color-gold"] { background-color: var(--bubble-gold); }
-    .modal .color-label[for="color-orange"] { background-color: var(--bubble-orange); }
-    .modal .color-label[for="color-default"] { background-color: var(--bubble-default); }
-
-    .modal .entry-button {
-      background: linear-gradient(135deg, var(--light), var(--accent));
-      border-radius: 12px; padding: 14px; color: #fff; text-decoration: none; font-size: 16px;
-      display: block; text-align: center; width: 100%; border: none; cursor: pointer;
-      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */ margin-top: 20px;
-    }
-    .modal .entry-button:hover { background: linear-gradient(135deg, var(--accent), var(--light)); transform: translateY(-3px) scale(1.01); /* Added scale */ box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Increased shadow */ }
-
-    /* --- صفحة الدردشة --- */
-    .chat-page {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: var(--primary); z-index: 1500;
-      display: none; flex-direction: column;
-      animation: slideInFromBottom 0.4s ease-out; /* Animation for chat page */
-    }
-    .chat-header {
-      background: var(--header-light); padding: 0.8rem 1rem;
-      display: flex; justify-content: space-between; align-items: center;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      position: sticky; top: 0; z-index: 10;
-    }
-    .chat-header .back-button { color: var(--text); font-size: 24px; cursor: pointer; padding: 5px; transition: color 0.3s ease, transform 0.3s ease; /* Added transition */ }
-     .chat-header .back-button:hover { color: var(--light); transform: scale(1.1); }
-    .chat-header .title { font-size: 17px; font-weight: 500; color: var(--text); text-align: center; flex-grow: 1; margin: 0 15px; }
-    .chat-header .header-spacer { width: 34px; }
-
-    .chat-content {
-      flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column;
-       scroll-behavior: smooth; /* Smooth scrolling */
-    }
-
-    /* --- رسالة الترحيب --- */
-    .welcome-message-container {
-        display: flex;
-        align-items: center;
-        background-color: rgba(0, 31, 35, 0.5);
-        padding: 12px 15px;
-        border-radius: 10px;
-        margin: 0 auto 15px auto;
-        max-width: 90%;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        animation: fadeIn 0.5s 0.2s ease-out backwards; /* Fade in welcome message */
-    }
-    .welcome-message-container .fa-lock {
-        color: #a2d2db;
-        font-size: 16px;
-        margin-left: 10px;
-    }
-    .welcome-message-container p {
-        color: #d5d5d5;
-        font-size: 14px;
-        line-height: 1.5;
-        margin: 0;
-    }
-
-    /* --- Messages and Reply/Delete --- */
-    .message-item {
-        max-width: 80%; margin-bottom: 15px; display: flex; align-items: flex-end;
-        position: relative; /* Needed for absolute positioning of reply context */
-        transition: transform 0.2s ease-out; /* For swipe effect */
-        user-select: none; /* Prevent text selection during swipe/long press */
-        animation: popIn 0.3s ease-out; /* Message appearance animation */
-    }
-    .message-item.sent { align-self: flex-end; flex-direction: row-reverse; }
-    .message-item.received { align-self: flex-start; }
-    .message-item.swiping { transition: none; } /* Disable transition during swipe */
-
-    .message-avatar {
-        width: 32px; height: 32px; border-radius: 50%;
-        font-size: 18px;
-        display: flex; align-items: center; justify-content: center;
-        margin: 0 8px;
-        background-color: var(--secondary);
-        color: var(--text);
-        flex-shrink: 0;
-        align-self: flex-start;
-        margin-top: 5px;
-    }
-    .message-item.sent .message-avatar { background-color: var(--accent); }
-
-    .message-bubble {
-      padding: 10px 14px; border-radius: 18px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); position: relative;
-      word-wrap: break-word; max-width: calc(100% - 48px);
-      border: 1px solid transparent;
-      transition: background-color 0.3s ease; /* Transition for potential interactions */
-    }
-    /* Bubble Colors */
-    .message-item.sent .bubble-red { background-color: var(--bubble-red); border-color: var(--bubble-red-border); border-bottom-right-radius: 4px; }
-    .message-item.sent .bubble-blue { background-color: var(--bubble-blue); border-color: var(--bubble-blue-border); border-bottom-right-radius: 4px; }
-    .message-item.sent .bubble-green { background-color: var(--bubble-green); border-color: var(--bubble-green-border); border-bottom-right-radius: 4px; }
-    .message-item.sent .bubble-gold { background-color: var(--bubble-gold); border-color: var(--bubble-gold-border); border-bottom-right-radius: 4px; }
-    .message-item.sent .bubble-orange { background-color: var(--bubble-orange); border-color: var(--bubble-orange-border); border-bottom-right-radius: 4px; }
-    .message-item.sent .bubble-default { background-color: var(--bubble-default); border-color: var(--bubble-default-border); border-bottom-right-radius: 4px; }
-    .message-item.received .message-bubble { background: var(--secondary); border-bottom-left-radius: 4px; border: 1px solid var(--accent); }
-
-    .message-sender { font-weight: bold; margin-bottom: 4px; color: #a2d2db; font-size: 13px; }
-    .message-text { color: #e0e0e0; font-size: 15px; line-height: 1.45; }
-    .message-time { font-size: 11px; color: #a0a0a0; margin-top: 5px; text-align: left; }
-    .message-item.sent .message-time { text-align: right; }
-
-    /* --- Reply Styling --- */
-     .reply-context-display {
-        background-color: rgba(0, 0, 0, 0.2);
-        padding: 5px 10px;
-        margin-bottom: 5px;
-        border-radius: 8px;
-        border-left: 3px solid var(--light); /* Indicator */
-        font-size: 13px;
-        color: #c0c0c0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
-    }
-    .reply-context-display strong { color: #a2d2db; } /* Original sender */
-
-    /* --- Input Area & Reply Preview --- */
-    .chat-input-area {
-        padding: 12px 15px; background: var(--header-light);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        position: sticky; bottom: 0; z-index: 10;
-        display: flex; flex-direction: column; /* Stack reply preview and input */
-    }
-    #replyPreview {
-        display: none; /* Hidden by default */
-        background-color: rgba(0, 64, 71, 0.3); /* --light with alpha */
-        padding: 8px 12px;
-        margin-bottom: 8px;
-        border-radius: 8px;
-        font-size: 13px;
-        color: #e0e0e0;
-        position: relative;
-        animation: slideInFromTop 0.3s ease-out;
-    }
-    #replyPreview .reply-preview-content {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-bottom: 3px;
-    }
-     #replyPreview .reply-preview-sender {
-        font-weight: bold;
-        color: #a2d2db;
-    }
-    #replyPreview .cancel-reply {
-        position: absolute;
-        top: 5px;
-        left: 8px; /* Adjusted for LTR close icon */
-        font-size: 18px;
-        color: #aaa;
-        cursor: pointer;
-        line-height: 1;
-        transition: color 0.2s ease;
-    }
-     #replyPreview .cancel-reply:hover { color: #fff; }
-
-    .chat-input-controls {
-        display: flex; align-items: flex-end; /* Align items to bottom */
-    }
-    .chat-input {
-        flex: 1; background: var(--secondary); border: none; border-radius: 20px;
-        padding: 10px 18px; color: var(--text); font-family: 'Tajawal', sans-serif;
-        font-size: 15px; resize: none; max-height: 100px; min-height: 20px; /* Changed from 40px */
-        line-height: 1.4; overflow-y: auto;
-        transition: box-shadow 0.3s ease; /* Added transition */
-    }
-    .chat-input:focus { outline: none; box-shadow: 0 0 0 2px var(--accent); }
-
-    .send-button {
-        background: var(--accent); color: white; border: none; width: 40px; height: 40px;
-        border-radius: 50%; margin-right: 10px; display: flex; align-items: center;
-        justify-content: center; cursor: pointer; transition: background 0.3s ease, transform 0.2s ease; /* Added transition */
-        flex-shrink: 0; position: relative; /* Needed for wave */
-    }
-    .send-button:hover { background: var(--light); transform: scale(1.1); }
-    .send-button:active { transform: scale(0.95); } /* Click effect */
-    .send-button i { font-size: 18px; position: relative; z-index: 2; }
-
-    /* --- Sound Wave Effect on Send Button --- */
-    .send-button::before,
-    .send-button::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 100%;
-        height: 100%;
-        border: 2px solid rgba(0, 150, 255, 0.5); /* Blue transparent */
-        border-radius: 50%;
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 0;
-        animation: wave 2s infinite ease-out;
-        z-index: 1; /* Behind the icon */
-        pointer-events: none; /* Allow clicks through */
-    }
-    .send-button::after {
-        animation-delay: 0.5s;
-    }
-    @keyframes wave {
-        0% {
-            transform: translate(-50%, -50%) scale(0.8);
-            opacity: 0.8;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Haawa au - غرف الدردشة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Variables & Global Reset --- */
+        :root {
+            --primary: #000E0F;
+            --secondary: #001F23;
+            --accent: #00333A;
+            --light: #004047;
+            --header-light: #001A1F;
+            --text: #F5F5F5;
+            --text-muted: #b0b0b0;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --bubble-red: #4d0f0f;
+            --bubble-red-border: #8b1a1a;
+            --bubble-blue: #0f2b4d;
+            --bubble-blue-border: #1a4f8b;
+            --bubble-green: #104d0f;
+            --bubble-green-border: #1e8b1a;
+            --bubble-gold: #614a0a;
+            --bubble-gold-border: #b48613;
+            --bubble-orange: #61350a;
+            --bubble-orange-border: #b46013;
+            --bubble-default: var(--accent);
+            --bubble-default-border: var(--light);
+            --sidebar-width: 280px;
+            --transition-speed-fast: 0.2s;
+            --transition-speed-medium: 0.3s;
+            --transition-speed-slow: 0.45s;
+            --transition-timing: cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        100% {
-            transform: translate(-50%, -50%) scale(2.5);
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            direction: rtl;
+            min-height: 100vh;
+            touch-action: manipulation;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            background: var(--header-light);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: background-color var(--transition-speed-medium) ease;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar img {
+            width: 60px;
+            height: 40px;
+            border-radius: 10px;
+            margin-left: 10px;
+            object-fit: cover;
+            border: 2px solid var(--light);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: transform var(--transition-speed-medium) ease;
+        }
+
+        .navbar img:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar .caption {
+            font-size: 16px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* --- Sidebar Icon --- */
+        .sidebar-icon-wrapper {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .sidebar-toggle-icon {
+            color: var(--text);
+            font-size: 24px;
+            transition: color var(--transition-speed-medium) ease, transform var(--transition-speed-medium) ease;
+        }
+
+        .sidebar-toggle-icon:hover {
+            color: var(--light);
+            transform: rotate(90deg);
+        }
+
+        /* --- Sidebar & Overlay --- */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 2400;
             opacity: 0;
+            visibility: hidden;
+            transition: opacity var(--transition-speed-slow) ease, visibility 0s linear var(--transition-speed-slow);
         }
-    }
-    /* --- End Sound Wave Effect --- */
 
-    .loading-placeholder { text-align: center; padding: 30px; color: #b8b8b8; font-size: 16px; }
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity var(--transition-speed-slow) ease;
+        }
 
-    /* --- Simple Confirmation Dialog (for delete) --- */
-    .confirmation-dialog {
-        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.7); z-index: 3000;
-        justify-content: center; align-items: center; animation: fadeIn 0.2s ease;
-    }
-    .confirmation-box {
-        background: var(--secondary); padding: 25px; border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.4); text-align: center;
-        max-width: 300px; animation: slideIn 0.3s ease-out;
-    }
-    .confirmation-box p { margin-bottom: 20px; color: var(--text); font-size: 16px; }
-    .confirmation-buttons button {
-        padding: 10px 20px; margin: 0 8px; border: none; border-radius: 6px;
-        font-size: 15px; cursor: pointer; transition: background-color 0.2s ease, transform 0.2s ease;
-        font-family: 'Tajawal', sans-serif;
-    }
-    #confirmDeleteBtn { background-color: #c0392b; color: white; }
-    #confirmDeleteBtn:hover { background-color: #e74c3c; transform: translateY(-2px); }
-    #cancelDeleteBtn { background-color: var(--accent); color: white; }
-    #cancelDeleteBtn:hover { background-color: var(--light); transform: translateY(-2px); }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: calc(-1 * var(--sidebar-width)); /* Start off-screen right for RTL */
+            width: var(--sidebar-width);
+            height: 100%;
+            background-color: var(--secondary);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+            z-index: 2500;
+            padding: 25px 15px;
+            transition: right var(--transition-speed-slow) var(--transition-timing);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--accent);
+        }
+
+        .sidebar.active {
+            right: 0; /* Slide in */
+        }
+
+        /* --- Sidebar Profile Area --- */
+        .sidebar-profile-area {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 15px; /* Reduced top padding after removing icon */
+            position: relative;
+        }
+
+        /* REMOVED: .edit-profile-icon {} */
+        /* REMOVED: .edit-profile-icon:hover {} */
+
+        .profile-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            margin: 0 auto 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            color: var(--text);
+            border: 3px solid var(--light);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-profile-area .official-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
+
+        .sidebar-profile-area .id-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+        }
+
+        .sidebar-profile-area .id-copy-icon {
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--light);
+            transition: color var(--transition-speed-fast) ease, transform var(--transition-speed-fast) ease;
+        }
+
+        .sidebar-profile-area .id-copy-icon:hover {
+            color: var(--text);
+            transform: scale(1.2);
+        }
+
+        .sidebar-profile-area .id-copy-icon.copied {
+            color: #4caf50; /* Green checkmark indication */
+        }
+
+        /* --- Sidebar Navigation --- */
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .sidebar-nav li {
+            display: flex;
+            align-items: center;
+            padding: 14px 12px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color var(--transition-speed-medium) ease,
+                        transform var(--transition-speed-fast) ease,
+                        box-shadow var(--transition-speed-medium) ease;
+            color: var(--text);
+            font-size: 15px;
+            overflow: hidden; /* Helps contain effects */
+        }
+
+        .sidebar-nav li i {
+            margin-left: 18px;
+            width: 22px;
+            text-align: center;
+            color: var(--light);
+            font-size: 18px;
+            transition: color var(--transition-speed-medium) ease,
+                        transform var(--transition-speed-medium) ease; /* Added transform transition */
+        }
+
+        .sidebar-nav li span {
+            transition: transform var(--transition-speed-medium) ease; /* Transition for text movement */
+        }
+
+        /* Enhanced Interaction Effect */
+        .sidebar-nav li:hover {
+            background-color: var(--accent);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transform: translateX(-6px) scale(1.01); /* Slightly more pronounced effect */
+        }
+
+        .sidebar-nav li:hover i {
+            color: var(--text);
+            transform: scale(1.1) rotate(-5deg); /* Icon scales and tilts slightly */
+        }
+        .sidebar-nav li:hover span {
+            transform: translateX(3px); /* Text moves slightly right */
+        }
 
 
-    /* --- Animations --- */
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-     @keyframes slideInFromBottom { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
-     @keyframes slideInFromTop { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-     @keyframes popIn {
-        0% { transform: scale(0.8); opacity: 0; }
-        80% { transform: scale(1.05); opacity: 1; }
-        100% { transform: scale(1); opacity: 1; }
-    }
+        .sidebar-nav li:active {
+            transform: translateX(-2px) scale(0.98); /* Refined click feedback */
+            background-color: var(--light);
+            box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.25); /* Slightly deeper inner shadow */
+        }
+
+        /* --- Banners --- */
+        .banner-container {
+            max-width: 1024px;
+            margin: 20px auto;
+            padding: 0 15px;
+            overflow: hidden;
+        }
+
+        .banners {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            aspect-ratio: 2400 / 660;
+            max-height: 400px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .banners-wrapper {
+            display: flex;
+            transition: transform 0.5s ease;
+            height: 100%;
+        }
+
+        .banner-slide {
+            min-width: 100%;
+            height: 100%;
+            flex-shrink: 0;
+        }
+
+        .banners img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .banner-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 5;
+        }
+
+        .banner-dot {
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color var(--transition-speed-medium) ease, transform var(--transition-speed-fast) ease; /* Added transform */
+        }
+        .banner-dot:hover {
+            transform: scale(1.2);
+        }
+
+        .banner-dot.active {
+            background: #fff;
+             transform: scale(1.3); /* Active dot is larger */
+        }
+
+        .banner-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 10;
+            transition: background-color var(--transition-speed-medium) ease, transform var(--transition-speed-fast) ease;
+        }
+
+        .banner-nav:hover {
+            background: rgba(0, 0, 0, 0.6);
+            transform: translateY(-50%) scale(1.1); /* Scale on hover */
+        }
+         .banner-nav:active {
+            transform: translateY(-50%) scale(1.0); /* Scale back on click */
+         }
+
+        .banner-prev { left: 15px; }
+        .banner-next { right: 15px; }
+
+        /* --- Chat Rooms Section --- */
+        .rooms-section {
+            padding: 30px 15px;
+        }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .room-box {
+            background: var(--secondary);
+            border-radius: 15px;
+            overflow: hidden;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+            transition: all var(--transition-speed-medium) var(--transition-timing);
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            aspect-ratio: 1 / 1;
+        }
+
+        .room-box:hover {
+            transform: translateY(-8px) scale(1.03); /* Enhanced hover effect */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            border-color: var(--light);
+        }
+
+        .room-box .room-image-container {
+            flex-grow: 1;
+            overflow: hidden;
+            width: 100%;
+            background-color: var(--accent);
+        }
+
+        .room-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform var(--transition-speed-slow) ease; /* Slower image zoom */
+        }
+
+        .room-box:hover img {
+            transform: scale(1.1); /* More pronounced zoom */
+        }
+
+        .room-box h3 {
+            font-size: 15px;
+            padding: 12px 10px;
+            color: var(--text);
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background: var(--secondary);
+            margin: 0;
+            transition: color var(--transition-speed-medium) ease;
+        }
+        .room-box:hover h3 {
+            color: #a2d2db; /* Change text color on hover */
+        }
+
+        /* --- Modal (Entry Form) --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            padding: 20px;
+            overflow-y: auto;
+            animation: fadeIn var(--transition-speed-medium) ease-out;
+        }
+
+        .modal-content {
+            background: var(--secondary);
+            margin: 8% auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 450px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: slideIn var(--transition-speed-slow) ease-out;
+        }
+
+        .modal .close {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            font-size: 30px;
+            color: #aaa;
+            cursor: pointer;
+            transition: color var(--transition-speed-medium), transform var(--transition-speed-medium) ease;
+            line-height: 1;
+        }
+
+        .modal .close:hover {
+            color: #fff;
+            transform: rotate(180deg); /* Spin effect */
+        }
+
+        .modal h2 {
+            margin-bottom: 25px;
+            color: var(--text);
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .modal label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ddd;
+            font-size: 14px;
+        }
+
+        .modal input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--accent);
+            background: var(--primary);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 15px;
+            margin-bottom: 15px;
+            font-family: 'Tajawal', sans-serif;
+            transition: border-color var(--transition-speed-medium) ease, box-shadow var(--transition-speed-medium) ease;
+        }
+
+        .modal input[type="text"]:focus {
+            outline: none;
+            border-color: var(--light);
+            box-shadow: 0 0 0 3px rgba(0, 64, 71, 0.5);
+        }
+
+        .modal .options-container {
+            margin-bottom: 20px;
+        }
+
+        .modal .avatar-options, .modal .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 5px;
+        }
+
+        .modal input[type="radio"] {
+            display: none;
+        }
+
+        .modal .avatar-label, .modal .color-label {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all var(--transition-speed-fast) ease;
+            display: flex; /* Center content */
+            align-items: center; /* Center content */
+            justify-content: center; /* Center content */
+        }
+
+        .modal .avatar-label {
+            font-size: 24px;
+            background-color: var(--accent);
+            line-height: 1;
+            padding: 5px 8px;
+             width: 40px; /* Ensure consistent size */
+             height: 40px;
+        }
+
+        .modal .color-label {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .modal input[type="radio"]:checked + label {
+            border-color: #a2d2db;
+            transform: scale(1.15) rotate(5deg); /* Tilt effect when selected */
+            box-shadow: 0 0 12px rgba(162, 210, 219, 0.8);
+        }
+        .modal input[type="radio"]:not(:checked) + label:hover {
+            transform: scale(1.05); /* Slight scale on hover for unselected */
+            border-color: rgba(162, 210, 219, 0.5); /* Subtle hover border */
+        }
 
 
-    @media (max-width: 768px) {
-      .rooms-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; }
-      .modal-content { margin: 15% auto; padding: 25px; max-width: 90%; }
-      .banners { aspect-ratio: 16/7; max-height: 300px; }
-      .message-item { max-width: 90%; }
-      .welcome-message-container { max-width: 95%; }
-    }
-    @media (max-width: 480px) {
-      .rooms-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
-      .room-box h3 { font-size: 14px; padding: 10px 8px; }
-      .navbar { padding: 0.8rem; }
-      .navbar img { width: 50px; height: 35px; }
-      .banner-nav { width: 30px; height: 30px; font-size: 14px; }
-      .chat-header { padding: 0.7rem 0.8rem; }
-      .chat-header .title { font-size: 16px; }
-      .chat-header .back-button { font-size: 22px; }
-      .message-text { font-size: 14px; }
-      .message-avatar { width: 28px; height: 28px; font-size: 16px; }
-      .modal-content { margin: 20% auto; padding: 20px; } /* Adjusted margin */
-      .modal h2 { font-size: 18px; }
-      .modal .avatar-label { font-size: 22px; }
-      .modal .color-label { width: 30px; height: 30px; }
-      .modal .entry-button { font-size: 15px; padding: 12px; }
-      .chat-input-area { padding: 10px 12px; }
-      .chat-input { padding: 9px 15px; font-size: 14px; }
-      .send-button { width: 36px; height: 36px; margin-right: 8px; }
-      .send-button i { font-size: 16px; }
-      .welcome-message-container p { font-size: 13px; }
-      .welcome-message-container .fa-lock { font-size: 14px; }
-      #replyPreview { padding: 6px 10px; font-size: 12px; }
-      #replyPreview .cancel-reply { font-size: 16px; }
-    }
-  </style>
+        /* Specific color styles */
+        .modal .color-label[for="color-red"] { background-color: var(--bubble-red); }
+        .modal .color-label[for="color-blue"] { background-color: var(--bubble-blue); }
+        .modal .color-label[for="color-green"] { background-color: var(--bubble-green); }
+        .modal .color-label[for="color-gold"] { background-color: var(--bubble-gold); }
+        .modal .color-label[for="color-orange"] { background-color: var(--bubble-orange); }
+        .modal .color-label[for="color-default"] { background-color: var(--bubble-default); }
+
+        .modal .entry-button {
+            background: linear-gradient(135deg, var(--light), var(--accent));
+            border-radius: 12px;
+            padding: 14px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            display: block;
+            text-align: center;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-speed-slow) var(--transition-timing);
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal .entry-button:hover {
+            background: linear-gradient(135deg, var(--accent), var(--light));
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+        }
+         .modal .entry-button:active {
+            transform: translateY(-1px) scale(0.99);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+         }
+
+        /* --- Chat Page --- */
+        .chat-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            z-index: 1500;
+            display: none;
+            flex-direction: column;
+            animation: slideInFromBottom var(--transition-speed-slow) ease-out;
+        }
+
+        .chat-header {
+            background: var(--header-light);
+            padding: 0.8rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .chat-header .back-button {
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            transition: color var(--transition-speed-medium) ease, transform var(--transition-speed-medium) ease;
+        }
+
+        .chat-header .back-button:hover {
+            color: var(--light);
+            transform: scale(1.1) translateX(3px); /* Move slightly on hover */
+        }
+        .chat-header .back-button:active {
+            transform: scale(1.0);
+        }
+
+        .chat-header .title {
+            font-size: 17px;
+            font-weight: 500;
+            color: var(--text);
+            text-align: center;
+            flex-grow: 1;
+            margin: 0 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-header .header-spacer {
+            width: 34px; /* Match back button width approx */
+        }
+
+        .chat-content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            scroll-behavior: smooth;
+        }
+
+        /* --- Welcome Message --- */
+        .welcome-message-container {
+            display: flex;
+            align-items: center;
+            background-color: rgba(0, 31, 35, 0.5);
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin: 0 auto 15px auto;
+            max-width: 90%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: fadeIn 0.5s 0.2s ease-out backwards;
+            border-left: 3px solid var(--light);
+        }
+
+        .welcome-message-container .fa-lock {
+            color: #a2d2db;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        .welcome-message-container p {
+            color: #d5d5d5;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* --- Messages General --- */
+        .message-item {
+            max-width: 80%;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-end;
+            position: relative;
+            transition: transform var(--transition-speed-fast) ease-out; /* Faster swipe feedback */
+            user-select: none;
+            animation: popIn var(--transition-speed-medium) ease-out;
+        }
+
+        .message-item.sent {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-item.received {
+            align-self: flex-start;
+        }
+
+        .message-item.swiping {
+            transition: none; /* Disable smooth transition during active swipe */
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 8px;
+            background-color: var(--secondary);
+            color: var(--text);
+            flex-shrink: 0;
+            align-self: flex-start;
+            margin-top: 5px; /* Align better with first line of text */
+            border: 1px solid var(--accent);
+        }
+
+        .message-item.sent .message-avatar {
+            background-color: var(--accent);
+            border-color: var(--light);
+        }
+
+        /* --- Message Bubble --- */
+        .message-bubble {
+            padding: 10px 14px;
+            border-radius: 18px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15); /* Slightly enhanced shadow */
+            position: relative;
+            word-wrap: break-word;
+            max-width: calc(100% - 48px); /* Ensure it doesn't overlap avatar */
+            border: 1px solid transparent;
+            transition: background-color var(--transition-speed-medium) ease;
+        }
+
+        /* Bubble Colors & Shapes */
+        .message-item.sent .message-bubble { border-bottom-right-radius: 4px; }
+        .message-item.received .message-bubble { background: var(--secondary); border-bottom-left-radius: 4px; border: 1px solid var(--accent); }
+
+        .message-item.sent .bubble-red { background-color: var(--bubble-red); border-color: var(--bubble-red-border); }
+        .message-item.sent .bubble-blue { background-color: var(--bubble-blue); border-color: var(--bubble-blue-border); }
+        .message-item.sent .bubble-green { background-color: var(--bubble-green); border-color: var(--bubble-green-border); }
+        .message-item.sent .bubble-gold { background-color: var(--bubble-gold); border-color: var(--bubble-gold-border); }
+        .message-item.sent .bubble-orange { background-color: var(--bubble-orange); border-color: var(--bubble-orange-border); }
+        .message-item.sent .bubble-default { background-color: var(--bubble-default); border-color: var(--bubble-default-border); }
+
+        /* --- Message Content --- */
+        .message-sender {
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #a2d2db;
+            font-size: 13px;
+        }
+
+        .message-text {
+            color: #e0e0e0;
+            font-size: 15px;
+            line-height: 1.45;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #a0a0a0;
+            margin-top: 5px;
+            text-align: left;
+        }
+
+        .message-item.sent .message-time {
+            text-align: right;
+        }
+
+        /* --- Reply Context Display (within bubble) --- */
+         .reply-context-display {
+            background-color: rgba(0, 0, 0, 0.25); /* Slightly darker */
+            padding: 6px 10px;
+            margin: -2px 0 8px 0; /* Pull up slightly, more bottom margin */
+            border-radius: 8px;
+            border-left: 3px solid var(--light);
+            font-size: 13px;
+            color: #c0c0c0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            cursor: pointer; /* Indicate it might be clickable (future feature?) */
+            transition: background-color var(--transition-speed-fast) ease;
+        }
+        .reply-context-display:hover {
+            background-color: rgba(0, 0, 0, 0.4); /* Darken on hover */
+        }
+        .reply-context-display strong {
+            color: #a2d2db;
+            font-weight: 600; /* Slightly bolder */
+        }
+
+        /* --- Chat Input Area --- */
+        .chat-input-area {
+            padding: 12px 15px;
+            background: var(--header-light);
+            border-top: 1px solid var(--border-color);
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            transition: padding-bottom var(--transition-speed-fast) ease;
+        }
+
+        /* --- Reply Preview (above input) --- */
+        #replyPreview {
+            display: none; /* Hidden by default */
+            background-color: rgba(0, 64, 71, 0.3);
+            padding: 8px 12px 10px 35px; /* Make space for cancel button */
+            margin-bottom: 8px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #e0e0e0;
+            position: relative;
+            animation: slideInFromTop var(--transition-speed-medium) ease-out;
+            overflow: hidden;
+        }
+
+        #replyPreview .reply-preview-content {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+            line-height: 1.3;
+        }
+
+         #replyPreview .reply-preview-sender {
+            font-weight: bold;
+            color: #a2d2db;
+        }
+
+        #replyPreview .cancel-reply {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 10px; /* Positioned left for RTL */
+            font-size: 22px; /* Larger cancel icon */
+            color: #aaa;
+            cursor: pointer;
+            line-height: 1;
+            transition: color var(--transition-speed-fast) ease, transform var(--transition-speed-fast) ease;
+        }
+
+         #replyPreview .cancel-reply:hover {
+            color: #fff;
+            transform: translateY(-50%) scale(1.2);
+         }
+
+        /* --- Input Controls (Textarea + Send) --- */
+        .chat-input-controls {
+            display: flex;
+            align-items: flex-end; /* Align items to bottom */
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--secondary);
+            border: 1px solid var(--accent); /* Subtle border */
+            border-radius: 20px;
+            padding: 10px 18px;
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 15px;
+            resize: none;
+            max-height: 100px; /* Limit expansion */
+            min-height: 20px; /* Start small */
+            line-height: 1.4;
+            overflow-y: auto;
+            transition: box-shadow var(--transition-speed-medium) ease, border-color var(--transition-speed-medium) ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--light);
+            box-shadow: 0 0 0 2px rgba(0, 64, 71, 0.4);
+        }
+
+        .send-button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px; /* Space between input and button */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background var(--transition-speed-medium) ease, transform var(--transition-speed-fast) ease;
+            flex-shrink: 0;
+            position: relative; /* For wave effect */
+            overflow: hidden; /* Contain wave */
+        }
+
+        .send-button:hover {
+            background: var(--light);
+            transform: scale(1.1) rotate(-10deg); /* Rotate slightly on hover */
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+            transition-duration: 0.1s; /* Faster feedback on click */
+        }
+
+        .send-button i {
+            font-size: 18px;
+            position: relative;
+            z-index: 2;
+            transition: transform var(--transition-speed-fast) ease;
+        }
+        .send-button:active i {
+             transform: scale(0.9); /* Icon shrinks slightly on click */
+        }
+
+        /* Sound Wave Effect */
+        .send-button::before,
+        .send-button::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 100%; height: 100%;
+            border: 2px solid rgba(0, 150, 255, 0.4); /* More subtle blue */
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0;
+            animation: wave 1.8s infinite ease-out; /* Slightly faster wave */
+            z-index: 1;
+            pointer-events: none;
+        }
+        .send-button::after { animation-delay: 0.4s; }
+        @keyframes wave {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.7; }
+            100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+        }
+
+        /* --- Loading & Confirmation --- */
+        .loading-placeholder {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 16px;
+            font-style: italic;
+        }
+
+        .confirmation-dialog {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75); /* Slightly darker overlay */
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn var(--transition-speed-fast) ease;
+        }
+
+        .confirmation-box {
+            background: var(--secondary);
+            padding: 25px 30px; /* More horizontal padding */
+            border-radius: 12px; /* Slightly larger radius */
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            text-align: center;
+            max-width: 320px; /* Slightly wider */
+            animation: slideIn var(--transition-speed-medium) ease-out;
+            border-top: 3px solid var(--light); /* Top border accent */
+        }
+
+        .confirmation-box p {
+            margin-bottom: 25px; /* More space before buttons */
+            color: var(--text);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .confirmation-buttons button {
+            padding: 10px 25px; /* Wider buttons */
+            margin: 0 8px;
+            border: none;
+            border-radius: 8px; /* Rounded buttons */
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color var(--transition-speed-fast) ease, transform var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 500;
+        }
+
+        #confirmDeleteBtn {
+            background-color: #c0392b; /* Standard red */
+            color: white;
+            box-shadow: 0 2px 4px rgba(192, 57, 43, 0.3);
+        }
+        #confirmDeleteBtn:hover {
+            background-color: #e74c3c; /* Lighter red */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(192, 57, 43, 0.4);
+        }
+         #confirmDeleteBtn:active {
+             transform: translateY(0px);
+             box-shadow: 0 1px 2px rgba(192, 57, 43, 0.3);
+         }
+
+        #cancelDeleteBtn {
+            background-color: var(--accent);
+            color: white;
+             box-shadow: 0 2px 4px rgba(0, 51, 58, 0.3);
+        }
+        #cancelDeleteBtn:hover {
+            background-color: var(--light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 51, 58, 0.4);
+        }
+         #cancelDeleteBtn:active {
+             transform: translateY(0px);
+             box-shadow: 0 1px 2px rgba(0, 51, 58, 0.3);
+         }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(25px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes slideOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(25px) scale(0.98); } }
+        @keyframes slideInFromBottom { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideOutToBottom { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(60px); } }
+        @keyframes slideInFromTop { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn {
+            0% { transform: scale(0.85); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+
+        /* --- Media Queries (Responsive Design) --- */
+        @media (max-width: 768px) {
+            :root { --sidebar-width: 250px; }
+            .rooms-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; }
+            .modal-content { margin: 15% auto; padding: 25px; max-width: 90%; }
+            .banners { aspect-ratio: 16/7; max-height: 300px; }
+            .message-item { max-width: 90%; }
+            .welcome-message-container { max-width: 95%; }
+        }
+
+        @media (max-width: 480px) {
+            :root { --sidebar-width: 220px; }
+            .navbar { padding: 0.8rem; }
+            .navbar img { width: 50px; height: 35px; }
+            .navbar .caption { font-size: 15px; }
+            .sidebar-toggle-icon { font-size: 22px; }
+
+            .profile-circle { width: 70px; height: 70px; font-size: 30px; margin-bottom: 10px;}
+             .sidebar-profile-area .official-text { font-size: 15px; }
+             .sidebar-profile-area .id-section { font-size: 13px; margin-bottom: 20px; }
+             .sidebar-profile-area .id-copy-icon { font-size: 15px; }
+
+            .sidebar-nav li { padding: 12px 10px; font-size: 14px; margin-bottom: 6px; }
+            .sidebar-nav li i { margin-left: 15px; font-size: 17px; width: 20px; }
+            .sidebar-nav li:hover { transform: translateX(-4px) scale(1.0); } /* Less movement on mobile */
+
+            .banner-nav { width: 30px; height: 30px; font-size: 14px; }
+            .banner-dot { width: 10px; height: 10px; }
+            .banner-dot.active { transform: scale(1.2); }
+
+            .rooms-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+            .room-box h3 { font-size: 14px; padding: 10px 8px; }
+
+            .modal-content { margin: 20% auto; padding: 20px; }
+            .modal h2 { font-size: 18px; }
+            .modal .avatar-label { font-size: 22px; width: 35px; height: 35px; }
+            .modal .color-label { width: 30px; height: 30px; }
+            .modal .entry-button { font-size: 15px; padding: 12px; }
+
+            .chat-header { padding: 0.7rem 0.8rem; }
+            .chat-header .title { font-size: 16px; }
+            .chat-header .back-button { font-size: 22px; }
+            .chat-header .header-spacer { width: 30px; }
+
+            .message-text { font-size: 14px; }
+            .message-sender { font-size: 12px; }
+            .message-time { font-size: 10px; }
+            .message-avatar { width: 28px; height: 28px; font-size: 16px; margin-top: 3px;}
+            .message-bubble { padding: 8px 12px; border-radius: 16px; }
+            .message-item { max-width: 92%; margin-bottom: 12px; }
+             .reply-context-display { font-size: 12px; padding: 5px 8px; }
+
+            .welcome-message-container p { font-size: 13px; }
+            .welcome-message-container .fa-lock { font-size: 14px; }
+
+            .chat-input-area { padding: 10px 12px; }
+            .chat-input { padding: 9px 15px; font-size: 14px; min-height: 18px; }
+            .send-button { width: 36px; height: 36px; margin-right: 8px; }
+            .send-button i { font-size: 16px; }
+             /* Disable wave animation on small screens if performance is an issue */
+             /* .send-button::before, .send-button::after { animation: none; display: none; } */
+
+            #replyPreview { padding: 6px 10px 8px 30px; font-size: 12px; }
+            #replyPreview .cancel-reply { font-size: 20px; left: 8px;}
+
+             .confirmation-box { max-width: 90%; padding: 20px 25px; }
+             .confirmation-box p { font-size: 15px; }
+             .confirmation-buttons button { padding: 9px 20px; font-size: 14px; }
+        }
+    </style>
 </head>
 <body>
-  <div class="navbar">
-    <div class="navbar-brand">
-      <img id="navbarLogo" src="https://i.postimg.cc/QCtCTctL/IMG.jpg" alt="الشعار">
-      <div class="caption">Haawa au</div>
+    <div class="navbar">
+        <div class="navbar-brand">
+            <img id="navbarLogo" src="https://i.postimg.cc/QCtCTctL/IMG.jpg" alt="الشعار">
+            <div class="caption">Haawa au</div>
+        </div>
+        <div class="sidebar-icon-wrapper" id="sidebarToggleBtn">
+            <div class="sidebar-toggle-icon">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
     </div>
-    <div class="profile-icon-wrapper">
-      <div class="profile-icon" id="userProfileIcon">
-        <i class="fas fa-user-circle"></i>
-      </div>
-    </div>
-  </div>
 
-  <div class="banner-container">
-    <div id="bannersCarousel" class="banners">
-      <div class="banners-wrapper" id="bannersWrapper">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebarMenu">
+        <div class="sidebar-profile-area">
+            <div class="profile-circle">
+                👤 </div>
+            <p class="official-text">Official</p> <div class="id-section">
+                <span id="userID">ID 12345789</span> <i class="fas fa-copy id-copy-icon" id="idCopyIcon" title="نسخ الـ ID"></i>
+            </div>
         </div>
-      <button class="banner-nav banner-prev"><i class="fas fa-chevron-right"></i></button>
-      <button class="banner-nav banner-next"><i class="fas fa-chevron-left"></i></button>
-      <div class="banner-controls" id="bannerControls"></div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li><i class="fas fa-home"></i><span>الرئيسية</span></li>
+                <li><i class="fas fa-wallet"></i><span>المحفظة</span></li>
+                <li><i class="fas fa-store"></i><span>المتجر</span></li>
+                <li><i class="fas fa-shopping-bag"></i><span>حقيبتي</span></li>
+                <li><i class="fas fa-user-edit"></i><span>تحرير</span></li>
+                <li><i class="fas fa-cog"></i><span>الإعدادات</span></li>
+            </ul>
+        </nav>
     </div>
-  </div>
 
-  <div class="rooms-section">
-      <div class="rooms-grid" id="roomsContainer">
-          <div class="loading-placeholder">جارٍ تحميل الغرف...</div>
-      </div>
-  </div>
-
-  <div id="entryModal" class="modal">
-    <div class="modal-content">
-      <span class="close" aria-label="إغلاق">&times;</span>
-      <h2 id="entryModalTitle">دخول الغرفة</h2>
-      <form id="entryForm">
-        <div>
-          <label for="username">اسم المستخدم:</label>
-          <input type="text" id="username" name="username" required placeholder="أدخل اسمك هنا">
-        </div>
-        <div class="options-container">
-          <label>اختر صورتك الرمزية:</label>
-          <div class="avatar-options">
-            <input type="radio" id="avatar1" name="avatar" value="👩‍🦱" checked>
-            <label for="avatar1" class="avatar-label">👩‍🦱</label>
-            <input type="radio" id="avatar2" name="avatar" value="👱‍♀️">
-            <label for="avatar2" class="avatar-label">👱‍♀️</label>
-            <input type="radio" id="avatar3" name="avatar" value="👩🏻‍🦰">
-            <label for="avatar3" class="avatar-label">👩🏻‍🦰</label>
-            <input type="radio" id="avatar4" name="avatar" value="👩‍🦳">
-            <label for="avatar4" class="avatar-label">👩‍🦳</label>
-          </div>
-        </div>
-        <div class="options-container">
-          <label>اختر لون فقاعة الدردشة:</label>
-          <div class="color-options">
-            <input type="radio" id="color-blue" name="bubbleColor" value="blue" checked>
-            <label for="color-blue" class="color-label" title="أزرق"></label>
-            <input type="radio" id="color-red" name="bubbleColor" value="red">
-            <label for="color-red" class="color-label" title="أحمر"></label>
-            <input type="radio" id="color-green" name="bubbleColor" value="green">
-            <label for="color-green" class="color-label" title="أخضر"></label>
-            <input type="radio" id="color-gold" name="bubbleColor" value="gold">
-            <label for="color-gold" class="color-label" title="ذهبي"></label>
-            <input type="radio" id="color-orange" name="bubbleColor" value="orange">
-            <label for="color-orange" class="color-label" title="برتقالي"></label>
-            <input type="radio" id="color-default" name="bubbleColor" value="default">
-            <label for="color-default" class="color-label" title="افتراضي"></label>
-          </div>
-        </div>
-        <button type="submit" class="entry-button">دخول الدردشة الآن</button>
-      </form>
-    </div>
-  </div>
-
-  <div class="chat-page" id="chatPage">
-    <div class="chat-header">
-      <div class="back-button" id="chatBackButton">
-        <i class="fas fa-arrow-right"></i>
-      </div>
-      <div class="title" id="chatRoomTitle">اسم الغرفة</div>
-      <div class="header-spacer"></div> </div>
-    <div class="chat-content" id="chatContent">
-        </div>
-    <div class="chat-input-area" id="chatInputArea">
-       <div id="replyPreview">
-            <span class="cancel-reply" id="cancelReplyBtn" title="إلغاء الرد">&times;</span>
-            <div class="reply-preview-sender">رد على: <strong id="replyPreviewSender"></strong></div>
-            <div class="reply-preview-content" id="replyPreviewContent"></div>
-       </div>
-       <div class="chat-input-controls">
-            <textarea class="chat-input" id="chatInput" placeholder="اكتب رسالة..." rows="1"></textarea>
-            <button class="send-button" id="sendButton">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+    <div class="banner-container">
+        <div id="bannersCarousel" class="banners">
+            <div class="banners-wrapper" id="bannersWrapper">
+                </div>
+            <button class="banner-nav banner-prev"><i class="fas fa-chevron-right"></i></button>
+            <button class="banner-nav banner-next"><i class="fas fa-chevron-left"></i></button>
+            <div class="banner-controls" id="bannerControls">
+                </div>
         </div>
     </div>
-  </div>
+
+    <div class="rooms-section">
+        <div class="rooms-grid" id="roomsContainer">
+            <div class="loading-placeholder">جارٍ تحميل الغرف...</div>
+            </div>
+    </div>
+
+    <div id="entryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" aria-label="إغلاق">&times;</span>
+            <h2 id="entryModalTitle">دخول الغرفة</h2>
+            <form id="entryForm">
+                <div>
+                    <label for="username">اسم المستخدم:</label>
+                    <input type="text" id="username" name="username" required placeholder="أدخل اسمك هنا" maxlength="20">
+                </div>
+                <div class="options-container">
+                    <label>اختر صورتك الرمزية:</label>
+                    <div class="avatar-options">
+                        <input type="radio" id="avatar1" name="avatar" value="👩‍🦱" checked>
+                        <label for="avatar1" class="avatar-label">👩‍🦱</label>
+                        <input type="radio" id="avatar2" name="avatar" value="👱‍♀️">
+                        <label for="avatar2" class="avatar-label">👱‍♀️</label>
+                        <input type="radio" id="avatar3" name="avatar" value="👩🏻‍🦰">
+                        <label for="avatar3" class="avatar-label">👩🏻‍🦰</label>
+                        <input type="radio" id="avatar4" name="avatar" value="👩‍🦳">
+                        <label for="avatar4" class="avatar-label">👩‍🦳</label>
+                    </div>
+                </div>
+                <div class="options-container">
+                    <label>اختر لون فقاعة الدردشة:</label>
+                    <div class="color-options">
+                        <input type="radio" id="color-blue" name="bubbleColor" value="blue" checked>
+                        <label for="color-blue" class="color-label" title="أزرق"></label>
+                        <input type="radio" id="color-red" name="bubbleColor" value="red">
+                        <label for="color-red" class="color-label" title="أحمر"></label>
+                        <input type="radio" id="color-green" name="bubbleColor" value="green">
+                        <label for="color-green" class="color-label" title="أخضر"></label>
+                        <input type="radio" id="color-gold" name="bubbleColor" value="gold">
+                        <label for="color-gold" class="color-label" title="ذهبي"></label>
+                        <input type="radio" id="color-orange" name="bubbleColor" value="orange">
+                        <label for="color-orange" class="color-label" title="برتقالي"></label>
+                        <input type="radio" id="color-default" name="bubbleColor" value="default">
+                        <label for="color-default" class="color-label" title="افتراضي"></label>
+                    </div>
+                </div>
+                <button type="submit" class="entry-button">دخول الدردشة الآن</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="chat-page" id="chatPage">
+        <div class="chat-header">
+            <div class="back-button" id="chatBackButton">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+            <div class="title" id="chatRoomTitle">اسم الغرفة</div>
+            <div class="header-spacer"></div>
+        </div>
+        <div class="chat-content" id="chatContent">
+            </div>
+        <div class="chat-input-area" id="chatInputArea">
+            <div id="replyPreview">
+                <span class="cancel-reply" id="cancelReplyBtn" title="إلغاء الرد">&times;</span>
+                <div class="reply-preview-sender">رد على: <strong id="replyPreviewSender"></strong></div>
+                <div class="reply-preview-content" id="replyPreviewContent"></div>
+            </div>
+            <div class="chat-input-controls">
+                <textarea class="chat-input" id="chatInput" placeholder="اكتب رسالة..." rows="1"></textarea>
+                <button class="send-button" id="sendButton">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
    <div class="confirmation-dialog" id="deleteConfirmationDialog">
        <div class="confirmation-box">
@@ -562,702 +1256,967 @@
    </div>
 
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getDatabase, ref, onValue, push, set, serverTimestamp, query, orderByChild, limitToLast, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js'; // Added remove
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getDatabase, ref, onValue, push, set, serverTimestamp, query, orderByChild, limitToLast, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
-    // --- Firebase Configuration ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyA4JLZsImCMDKGuMo_0-2izcqiwyiYBMBo", // KEEP YOUR API KEY SECURE
-        authDomain: "maawaau.firebaseapp.com",
-        projectId: "maawaau",
-        databaseURL: "https://maawaau-default-rtdb.firebaseio.com",
-        storageBucket: "maawaau.appspot.com",
-        messagingSenderId: "1098534875401",
-        appId: "1:1098534875401:web:c299126a5786c353b2a3d8"
-    };
+        // --- Firebase Configuration ---
+        // KEEP YOUR CONFIG SECURE - Consider using environment variables or backend functions in production
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY", // Replace with your actual API key
+            authDomain: "maawaau.firebaseapp.com",
+            projectId: "maawaau",
+            databaseURL: "https://maawaau-default-rtdb.firebaseio.com",
+            storageBucket: "maawaau.appspot.com",
+            messagingSenderId: "1098534875401",
+            appId: "1:1098534875401:web:c299126a5786c353b2a3d8"
+        };
 
-    // --- Initialize Firebase ---
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+        // --- Initialize Firebase ---
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-    // --- Global Variables ---
-    let currentBannerIndex = 0;
-    let bannerCount = 0;
-    let autoSlideInterval;
-    let currentUser = { name: null, avatar: null, color: null, currentRoomId: null };
-    let currentMessagesListener = null;
-    let replyToMessage = null; // Stores { id, sender, text } of message being replied to
-
-    // --- DOM Elements ---
-    const bannersWrapper = document.getElementById('bannersWrapper');
-    const bannerControls = document.getElementById('bannerControls');
-    const roomsContainer = document.getElementById('roomsContainer');
-    const entryModal = document.getElementById('entryModal');
-    const entryForm = document.getElementById('entryForm');
-    const entryModalTitle = document.getElementById('entryModalTitle');
-    const usernameInput = document.getElementById('username');
-    const chatPage = document.getElementById('chatPage');
-    const chatBackButton = document.getElementById('chatBackButton');
-    const chatRoomTitle = document.getElementById('chatRoomTitle');
-    const chatContent = document.getElementById('chatContent');
-    const chatInputArea = document.getElementById('chatInputArea'); // Container for preview + input
-    const replyPreview = document.getElementById('replyPreview');
-    const replyPreviewSender = document.getElementById('replyPreviewSender');
-    const replyPreviewContent = document.getElementById('replyPreviewContent');
-    const cancelReplyBtn = document.getElementById('cancelReplyBtn');
-    const chatInput = document.getElementById('chatInput');
-    const sendButton = document.getElementById('sendButton');
-    const deleteConfirmationDialog = document.getElementById('deleteConfirmationDialog');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-    const userProfileIcon = document.getElementById('userProfileIcon');
-
-
-    // --- Banner Functions ---
-    const loadBanners = () => {
-      bannersWrapper.innerHTML = '<div class="banner-slide"><div class="loading-placeholder" style="min-height: 100px;">جارٍ تحميل البنرات...</div></div>';
-      onValue(ref(db, 'banners'), (snapshot) => {
-        const bannersData = snapshot.val();
-        // Handle both object (keys are push IDs) and array structures
-        const banners = bannersData ? (Array.isArray(bannersData) ? bannersData : Object.values(bannersData)) : [];
-        const validBanners = banners.filter(banner => banner && banner.url); // Ensure banner has a URL
-        bannerCount = validBanners.length;
-
-        if (bannerCount > 0) {
-          bannersWrapper.innerHTML = '';
-          bannerControls.innerHTML = '';
-          validBanners.forEach((banner, index) => {
-            const slide = document.createElement('div');
-            slide.className = 'banner-slide';
-            // Ensure link exists, default to '#' if not
-            const link = banner.link || '#';
-            // **Crucially, check if banner.url exists before creating img**
-             if (banner.url) {
-                 slide.innerHTML = `<a href="${link}" target="_blank"><img src="${banner.url}" alt="بانر ${index + 1}" loading="lazy" onerror="this.style.display='none'; console.error('Failed to load banner image: ${banner.url}');"></a>`; // Added onerror handler
-                 bannersWrapper.appendChild(slide);
-
-                 const dot = document.createElement('div');
-                 dot.className = 'banner-dot' + (index === 0 ? ' active' : '');
-                 dot.dataset.index = index;
-                 bannerControls.appendChild(dot);
-             } else {
-                 console.warn("Banner data missing URL:", banner);
-             }
-          });
-           if (bannersWrapper.children.length > 0) {
-              updateBannerDots(0);
-              startAutoSlide();
-           } else {
-              bannersWrapper.innerHTML = '<div class="banner-slide"><p style="text-align: center; padding: 20px;">لا توجد بانرات صالحة للعرض.</p></div>';
-               bannerControls.innerHTML = '';
-           }
-        } else {
-          bannersWrapper.innerHTML = '<div class="banner-slide"><p style="text-align: center; padding: 20px;">لا توجد بانرات حالياً</p></div>';
-          bannerControls.innerHTML = '';
-        }
-      }, (error) => {
-        console.error('Error fetching banners:', error);
-        bannersWrapper.innerHTML = '<div class="banner-slide"><p style="text-align: center; padding: 20px; color: red;">خطأ في تحميل البانرات</p></div>';
-      });
-    };
-
-    const updateBannerDots = (index) => {
-      const dots = document.querySelectorAll('.banner-dot');
-      dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === index);
-      });
-    };
-
-    const goToBanner = (index) => {
-      if (bannerCount === 0 || index < 0 || index >= bannerCount) return; // Check bounds
-      currentBannerIndex = index;
-      bannersWrapper.style.transform = `translateX(-${index * 100}%)`;
-      updateBannerDots(index);
-      resetAutoSlide();
-    };
-
-    const nextBanner = () => {
-      if (bannerCount > 0) {
-        goToBanner((currentBannerIndex + 1) % bannerCount);
-      }
-    };
-
-    const prevBanner = () => {
-      if (bannerCount > 0) {
-        goToBanner((currentBannerIndex - 1 + bannerCount) % bannerCount);
-      }
-    };
-
-    const resetAutoSlide = () => {
-      clearInterval(autoSlideInterval);
-      startAutoSlide();
-    };
-
-    const startAutoSlide = () => {
-      clearInterval(autoSlideInterval); // Clear existing interval first
-      if (bannerCount > 1) {
-        autoSlideInterval = setInterval(nextBanner, 4000);
-      }
-    };
-
-    // --- Room Functions ---
-    const loadRooms = () => {
-      roomsContainer.innerHTML = '<div class="loading-placeholder">جارٍ تحميل الغرف...</div>';
-      onValue(ref(db, 'products'), (snapshot) => { // Still using 'products'
-        roomsContainer.innerHTML = '';
-        const rooms = snapshot.val() || {};
-        const roomIds = Object.keys(rooms);
-
-        if (roomIds.length === 0) {
-          roomsContainer.innerHTML = '<p style="text-align: center;">لا توجد غرف متاحة حالياً.</p>';
-          return;
-        }
-
-        roomIds.forEach(roomId => {
-          const roomData = rooms[roomId];
-          if (!roomData.title || !roomData.image) {
-              console.warn(`Skipping room ${roomId} due to missing title or image.`);
-              return;
-          }
-
-          const box = document.createElement('div');
-          box.className = 'room-box';
-          box.dataset.roomId = roomId;
-          box.dataset.roomTitle = roomData.title || 'غرفة غير مسماة';
-
-          box.innerHTML = `
-            <div class="room-image-container">
-                <img src="${roomData.image}" alt="${roomData.title}" loading="lazy" onerror="this.parentElement.innerHTML='<p style=\\'color:red;padding:10px;\\'>صورة غير متوفرة</p>';">
-            </div>
-            <h3>${roomData.title}</h3>
-          `;
-
-          box.addEventListener('click', () => {
-            showEntryModal(roomId, roomData.title);
-          });
-          roomsContainer.appendChild(box);
-        });
-      }, (error) => {
-        console.error('Error fetching rooms:', error);
-        roomsContainer.innerHTML = '<p style="text-align: center; color: red;">خطأ في تحميل الغرف. يرجى المحاولة لاحقاً.</p>';
-      });
-    };
-
-    // --- Entry Modal Functions ---
-    const showEntryModal = (roomId, roomTitle) => {
-      entryModalTitle.textContent = `دخول غرفة: ${roomTitle}`;
-      entryForm.dataset.roomId = roomId;
-      entryForm.dataset.roomTitle = roomTitle;
-      usernameInput.value = localStorage.getItem('lastUsername') || '';
-       // Reset selected avatar/color to default maybe?
-       entryForm.querySelector('input[name="avatar"][value="👩‍🦱"]').checked = true;
-       entryForm.querySelector('input[name="bubbleColor"][value="blue"]').checked = true;
-      entryModal.style.display = 'block';
-      usernameInput.focus();
-    };
-
-    const hideEntryModal = () => {
-      entryModal.style.animation = 'fadeOut 0.3s ease-out forwards';
-      entryModal.querySelector('.modal-content').style.animation = 'slideOut 0.4s ease-out forwards';
-      setTimeout(() => {
-          entryModal.style.display = 'none';
-          entryModal.style.animation = ''; // Reset animation
-          entryModal.querySelector('.modal-content').style.animation = '';
-      }, 400); // Match animation duration
-    };
-
-    entryForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = usernameInput.value.trim();
-        const avatar = entryForm.querySelector('input[name="avatar"]:checked').value;
-        const color = entryForm.querySelector('input[name="bubbleColor"]:checked').value;
-        const roomId = e.target.dataset.roomId;
-        const roomTitle = e.target.dataset.roomTitle;
-
-        if (!name) {
-            alert('يرجى إدخال اسم المستخدم.');
-            usernameInput.focus();
-            return;
-        }
-        if (!roomId) {
-            alert('خطأ: لم يتم تحديد الغرفة.');
-            return;
-        }
-
-        currentUser = { name, avatar, color, currentRoomId: roomId };
-        localStorage.setItem('lastUsername', name);
-
-        hideEntryModal();
-        enterChatRoom(roomId, roomTitle);
-    });
-
-    entryModal.querySelector('.close').addEventListener('click', hideEntryModal);
-    window.addEventListener('click', (e) => {
-      if (e.target === entryModal) {
-        hideEntryModal();
-      }
-    });
-
-     // --- Profile Icon Action ---
-     userProfileIcon.addEventListener('click', () => {
-        // Example action: Show user info or settings modal
-        if(currentUser.name) {
-            alert(`المستخدم الحالي: ${currentUser.name}\nالصورة الرمزية: ${currentUser.avatar}\nلون الفقاعة: ${currentUser.color}`);
-        } else {
-            alert('يرجى تسجيل الدخول أولاً.');
-            // Optionally, could open the entry modal if a room was last visited
-        }
-    });
-
-    // --- Chat Room Functions ---
-    const enterChatRoom = (roomId, roomTitle) => {
-        chatRoomTitle.textContent = roomTitle;
-        chatPage.style.display = 'flex';
-        chatContent.innerHTML = '';
-        addWelcomeMessage();
-        cancelReply(); // Ensure reply state is cleared
-        chatInput.value = '';
-        adjustTextareaHeight();
-        loadMessages(roomId);
-        setTimeout(() => chatInput.focus(), 100);
-    };
-
-    const addWelcomeMessage = () => {
-        const welcomeDiv = document.createElement('div');
-        welcomeDiv.className = 'welcome-message-container';
-        welcomeDiv.innerHTML = `
-            <i class="fas fa-lock"></i>
-            <p>أهلاً بكم في منصة Haawa. يرجى احترام بعضنا البعض والتحدث بطريقة مهذبة.</p>
-        `;
-        chatContent.appendChild(welcomeDiv);
-    };
-
-    const leaveChatRoom = () => {
-        chatPage.style.animation = 'slideOutToBottom 0.4s ease-out forwards';
-        setTimeout(() => {
-             chatPage.style.display = 'none';
-             chatPage.style.animation = ''; // Reset animation
-             if (currentMessagesListener) {
-                 currentMessagesListener(); // Detach listener
-                 currentMessagesListener = null;
-             }
-             currentUser = { name: null, avatar: null, color: null, currentRoomId: null };
-             chatContent.innerHTML = '';
-             cancelReply(); // Clear reply state
-        }, 400); // Match animation time
-    };
-
-    // --- Message Functions ---
-    const loadMessages = (roomId) => {
-        const messagesRef = ref(db, `rooms/${roomId}/messages`);
-        const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(50));
-
-        const tempLoader = document.createElement('div');
-        tempLoader.className = 'loading-placeholder';
-        tempLoader.textContent = 'جارٍ تحميل الرسائل...';
-        if (chatContent.childElementCount <= 1) {
-             chatContent.appendChild(tempLoader);
-        }
-
-        if (currentMessagesListener) {
-            currentMessagesListener(); // Detach previous listener
-        }
-
-        currentMessagesListener = onValue(messagesQuery, (snapshot) => {
-            const loader = chatContent.querySelector('.loading-placeholder:not(.no-messages)'); // Avoid removing the "no messages" placeholder
-            if (loader) loader.remove();
-
-            const messagesData = snapshot.val() || {};
-            const messageIds = Object.keys(messagesData);
-
-            const welcomeMsg = chatContent.querySelector('.welcome-message-container');
-            chatContent.innerHTML = ''; // Clear existing messages
-            if (welcomeMsg) chatContent.appendChild(welcomeMsg);
-
-            if (messageIds.length === 0) {
-                 const noMsg = document.createElement('div');
-                 noMsg.className = 'loading-placeholder no-messages'; // Add class to distinguish
-                 noMsg.textContent = 'لا توجد رسائل في هذه الغرفة بعد. كن أول من يكتب!';
-                 chatContent.appendChild(noMsg);
-            } else {
-                 const sortedMessages = messageIds.map(id => ({ id, ...messagesData[id] }))
-                                                .sort((a, b) => a.timestamp - b.timestamp);
-                 sortedMessages.forEach(message => {
-                     addMessageToChat(message);
-                 });
-                 scrollToBottom(true); // Scroll immediately on load
-             }
-        }, (error) => {
-            console.error(`Error loading messages for room ${roomId}:`, error);
-            chatContent.innerHTML = '';
-             addWelcomeMessage();
-            const errorMsg = document.createElement('div');
-            errorMsg.className = 'loading-placeholder';
-            errorMsg.style.color = 'red';
-            errorMsg.textContent = 'حدث خطأ أثناء تحميل الرسائل.';
-            chatContent.appendChild(errorMsg);
-        });
-    };
-
-    // --- Add Message with Reply/Swipe/LongPress Logic ---
-    const addMessageToChat = (message) => {
-        if (!message || !message.sender || !message.text || !message.id) return; // Need ID now
-
-        const isSent = message.sender === currentUser.name;
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message-item ${isSent ? 'sent' : 'received'}`;
-        messageDiv.dataset.messageId = message.id; // Store message ID
-        messageDiv.dataset.sender = message.sender; // Store sender
-        messageDiv.dataset.text = message.text; // Store text for reply/delete context
-
-        // Avatar
-        const avatarDiv = document.createElement('div');
-        avatarDiv.className = 'message-avatar';
-        avatarDiv.textContent = message.avatar || (isSent ? currentUser.avatar : '👤');
-
-        // Bubble
-        const bubbleDiv = document.createElement('div');
-        const bubbleColorClass = isSent ? `bubble-${message.color || currentUser.color || 'default'}` : '';
-        bubbleDiv.className = `message-bubble ${bubbleColorClass}`;
-
-        // Display Reply Context if exists
-        if (message.replyTo) {
-            const replyContextDiv = document.createElement('div');
-            replyContextDiv.className = 'reply-context-display';
-             // Fetch original message snippet if needed (complex) or just show sender/placeholder
-             replyContextDiv.innerHTML = `رد على <strong>${message.replyTo.sender || 'رسالة سابقة'}</strong>: ${message.replyTo.text ? message.replyTo.text.substring(0, 30) + '...' : '...'}`;
-            bubbleDiv.appendChild(replyContextDiv);
-        }
-
-        // Sender Name (for received)
-        if (!isSent) {
-            const senderDiv = document.createElement('div');
-            senderDiv.className = 'message-sender';
-            senderDiv.textContent = message.sender;
-            bubbleDiv.appendChild(senderDiv);
-        }
-
-        // Message Text
-        const textDiv = document.createElement('div');
-        textDiv.className = 'message-text';
-        textDiv.textContent = message.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        bubbleDiv.appendChild(textDiv);
-
-        // Time
-        const timeDiv = document.createElement('div');
-        timeDiv.className = 'message-time';
-        timeDiv.textContent = formatTime(message.timestamp);
-        bubbleDiv.appendChild(timeDiv);
-
-        // Assemble
-        messageDiv.appendChild(avatarDiv);
-        messageDiv.appendChild(bubbleDiv);
-        chatContent.appendChild(messageDiv);
-
-        // --- Add Interaction Listeners ---
-        addMessageInteractionListeners(messageDiv);
-
-        // Remove "no messages" placeholder
-        const noMsgPlaceholder = chatContent.querySelector('.loading-placeholder.no-messages');
-        if (noMsgPlaceholder) {
-            noMsgPlaceholder.remove();
-        }
-    };
-
-    // --- Message Interaction Handlers ---
-    const addMessageInteractionListeners = (messageElement) => {
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchEndX = 0;
-        let isSwiping = false;
-        let longPressTimer = null;
+        // --- Global Variables ---
+        let currentBannerIndex = 0;
+        let bannerCount = 0;
+        let autoSlideInterval;
+        let currentUser = { name: null, avatar: null, color: null, currentRoomId: null };
+        let currentMessagesListener = null; // Function to detach listener
+        let replyToMessage = null; // Stores { id, sender, text } of message being replied to
+        let messageToDeleteId = null; // Stores ID of message pending deletion confirmation
+        let longPressTimer = null; // Timer for long press detection
+        let swipeStartX = 0;       // Touch start X position for swipe
+        let swipeStartY = 0;       // Touch start Y position for swipe
+        let swipeCurrentX = 0;     // Touch current X position for swipe
+        let isSwiping = false;     // Flag if swipe action is active
         const longPressDuration = 700; // milliseconds for long press
-        const swipeThreshold = 50; // pixels to trigger swipe
+        const swipeThreshold = 50; // pixels to trigger swipe action
 
-        const messageId = messageElement.dataset.messageId;
-        const sender = messageElement.dataset.sender;
-        const text = messageElement.dataset.text;
-        const isSentMessage = messageElement.classList.contains('sent');
+        // --- DOM Elements ---
+        const navbarLogo = document.getElementById('navbarLogo');
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const userIDElement = document.getElementById('userID');
+        const idCopyIcon = document.getElementById('idCopyIcon');
+        const bannersWrapper = document.getElementById('bannersWrapper');
+        const bannerControls = document.getElementById('bannerControls');
+        const bannersEl = document.getElementById('bannersCarousel');
+        const bannerPrevBtn = document.querySelector('.banner-prev');
+        const bannerNextBtn = document.querySelector('.banner-next');
+        const roomsContainer = document.getElementById('roomsContainer');
+        const entryModal = document.getElementById('entryModal');
+        const entryModalCloseBtn = entryModal.querySelector('.close');
+        const entryModalTitle = document.getElementById('entryModalTitle');
+        const entryForm = document.getElementById('entryForm');
+        const usernameInput = document.getElementById('username');
+        const chatPage = document.getElementById('chatPage');
+        const chatBackButton = document.getElementById('chatBackButton');
+        const chatRoomTitle = document.getElementById('chatRoomTitle');
+        const chatContent = document.getElementById('chatContent');
+        const chatInputArea = document.getElementById('chatInputArea');
+        const replyPreview = document.getElementById('replyPreview');
+        const replyPreviewSender = document.getElementById('replyPreviewSender');
+        const replyPreviewContent = document.getElementById('replyPreviewContent');
+        const cancelReplyBtn = document.getElementById('cancelReplyBtn');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        const deleteConfirmationDialog = document.getElementById('deleteConfirmationDialog');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 
-        // --- Touch Start ---
-        messageElement.addEventListener('touchstart', (e) => {
-            // Don't prevent default for vertical scrolling
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-            isSwiping = false;
-            messageElement.style.transition = 'transform 0.1s ease-out'; // Faster transition for interaction
+        // ========================================================================
+        // --- Sidebar Logic ---
+        // ========================================================================
 
-            // Start long press timer only for sent messages
-            if (isSentMessage) {
-                clearTimeout(longPressTimer); // Clear any previous timer
-                longPressTimer = setTimeout(() => {
-                    // Long press detected
-                    showDeleteConfirmation(messageId);
-                    // Vibrate feedback (optional, requires browser support)
-                    if (navigator.vibrate) navigator.vibrate(50);
-                    // Prevent swipe/click after long press detected
-                    isSwiping = true; // Use isSwiping to block other actions
-                }, longPressDuration);
+        const openSidebar = () => {
+            sidebarMenu.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            // Optional: Prevent body scroll when sidebar is open
+            // document.body.style.overflow = 'hidden';
+        };
+
+        const closeSidebar = () => {
+            sidebarMenu.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            // Optional: Restore body scroll
+            // document.body.style.overflow = '';
+        };
+
+        const setupSidebarListeners = () => {
+            sidebarToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent click from closing immediately if body listener exists
+                if (sidebarMenu.classList.contains('active')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+
+            sidebarOverlay.addEventListener('click', closeSidebar);
+
+            // Copy ID Functionality
+            idCopyIcon.addEventListener('click', () => {
+                const userIdText = userIDElement.textContent.replace('ID ', '').trim();
+                navigator.clipboard.writeText(userIdText).then(() => {
+                    idCopyIcon.classList.replace('fa-copy', 'fa-check');
+                    idCopyIcon.classList.add('copied');
+                    idCopyIcon.title = "تم النسخ!";
+                    setTimeout(() => {
+                        idCopyIcon.classList.replace('fa-check', 'fa-copy');
+                        idCopyIcon.classList.remove('copied');
+                        idCopyIcon.title = "نسخ الـ ID";
+                    }, 1500);
+                }).catch(err => {
+                    console.error('Failed to copy ID: ', err);
+                    alert('فشل نسخ الـ ID.'); // Simple feedback
+                });
+            });
+        };
+
+        // ========================================================================
+        // --- Banner Carousel Logic ---
+        // ========================================================================
+
+        const loadBanners = () => {
+            bannersWrapper.innerHTML = '<div class="banner-slide"><div class="loading-placeholder" style="min-height: 150px; display:flex; align-items:center; justify-content:center;">جارٍ تحميل البنرات...</div></div>'; // Adjusted loading style
+            const bannersRef = ref(db, 'banners');
+
+            onValue(bannersRef, (snapshot) => {
+                const bannersData = snapshot.val();
+                const banners = bannersData ? Object.values(bannersData) : [];
+                const validBanners = banners.filter(b => b && b.url && typeof b.url === 'string');
+
+                bannersWrapper.innerHTML = ''; // Clear previous
+                bannerControls.innerHTML = ''; // Clear previous
+                bannerCount = 0; // Reset
+
+                if (validBanners.length > 0) {
+                    validBanners.forEach((banner, index) => {
+                        bannerCount++;
+                        const slide = document.createElement('div');
+                        slide.className = 'banner-slide';
+                        const link = (banner.link && typeof banner.link === 'string') ? banner.link : '#';
+                        // Added error handling for broken image links
+                        slide.innerHTML = `<a href="${link}" target="_blank" rel="noopener noreferrer"><img src="${banner.url}" alt="بانر ${index + 1}" loading="lazy" onerror="this.style.display='none'; console.error('Banner Img Load Error: ${banner.url}'); this.closest('a').innerHTML='<p style=\\'color:red; text-align:center; padding:20px;\\'>خطأ في تحميل الصورة</p>';"></a>`;
+                        bannersWrapper.appendChild(slide);
+
+                        const dot = document.createElement('div');
+                        dot.className = 'banner-dot';
+                        dot.dataset.index = index;
+                        bannerControls.appendChild(dot);
+                    });
+
+                    // Ensure everything is setup correctly if banners were added
+                     if (bannersWrapper.children.length > 0) {
+                         bannerCount = bannersWrapper.children.length; // Update count based on actual slides rendered
+                         currentBannerIndex = 0;
+                         goToBanner(0, true); // Go to first banner instantly
+                         startAutoSlide();
+                     } else {
+                         showNoBannersMessage(); // Case where filter removed all banners
+                     }
+
+                } else {
+                    showNoBannersMessage();
+                }
+            }, (error) => {
+                console.error('Error fetching banners:', error);
+                showNoBannersMessage('خطأ في تحميل البانرات');
+                clearInterval(autoSlideInterval);
+            });
+        };
+
+        const showNoBannersMessage = (message = 'لا توجد بانرات حالياً') => {
+            bannersWrapper.innerHTML = `<div class="banner-slide"><p style="text-align: center; padding: 20px; color:${message.includes('خطأ') ? 'red' : 'inherit'};">${message}</p></div>`;
+            bannerControls.innerHTML = '';
+            bannerCount = 0;
+            clearInterval(autoSlideInterval);
+        };
+
+        const updateBannerDots = (index) => {
+            const dots = bannerControls.querySelectorAll('.banner-dot');
+            dots.forEach(dot => {
+                dot.classList.toggle('active', parseInt(dot.dataset.index) === index);
+            });
+        };
+
+        const goToBanner = (index, immediate = false) => {
+            const actualSlideCount = bannersWrapper.children.length;
+            if (actualSlideCount === 0 || index < 0 || index >= actualSlideCount) return;
+
+            currentBannerIndex = index;
+            bannersWrapper.style.transition = immediate ? 'none' : 'transform 0.5s ease'; // Disable transition for immediate jump
+            bannersWrapper.style.transform = `translateX(-${index * 100}%)`;
+            updateBannerDots(index);
+
+             // Restore transition after immediate jump
+            if (immediate) {
+                 // Use a tiny timeout to ensure the transform is applied before re-enabling transition
+                 setTimeout(() => { bannersWrapper.style.transition = 'transform 0.5s ease'; }, 10);
+             }
+
+            resetAutoSlide();
+        };
+
+        const nextBanner = () => {
+            if (bannerCount > 0) {
+                const nextIndex = (currentBannerIndex + 1) % bannerCount;
+                goToBanner(nextIndex);
             }
-        }, { passive: true }); // Allow default scroll
+        };
 
-        // --- Touch Move ---
-        messageElement.addEventListener('touchmove', (e) => {
-            touchEndX = e.touches[0].clientX;
-            const touchEndY = e.touches[0].clientY;
-            const deltaX = touchEndX - touchStartX;
-            const deltaY = touchEndY - touchStartY;
+        const prevBanner = () => {
+            if (bannerCount > 0) {
+                const prevIndex = (currentBannerIndex - 1 + bannerCount) % bannerCount;
+                goToBanner(prevIndex);
+            }
+        };
 
-             // If moving vertically more than horizontally, likely scrolling, cancel actions
-            if (Math.abs(deltaY) > Math.abs(deltaX) + 10) {
-                 clearTimeout(longPressTimer); // Cancel long press if scrolling vertically
-                 if (isSwiping) { // Reset position if swipe was initiated
+        const startAutoSlide = () => {
+            clearInterval(autoSlideInterval);
+            if (bannerCount > 1) {
+                autoSlideInterval = setInterval(nextBanner, 4500); // Slightly slower interval
+            }
+        };
+
+        const resetAutoSlide = () => {
+            clearInterval(autoSlideInterval);
+            startAutoSlide();
+        };
+
+        const setupBannerListeners = () => {
+             bannerControls.addEventListener('click', (e) => {
+                if (e.target.classList.contains('banner-dot')) {
+                    goToBanner(parseInt(e.target.dataset.index, 10));
+                }
+            });
+            bannerNextBtn.addEventListener('click', nextBanner);
+            bannerPrevBtn.addEventListener('click', prevBanner);
+
+            // Touch swipe listeners
+            let touchStartX = 0;
+            bannersEl.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                clearInterval(autoSlideInterval); // Pause on touch
+            }, { passive: true });
+
+            bannersEl.addEventListener('touchend', (e) => {
+                const touchEndX = e.changedTouches[0].clientX;
+                const diff = touchEndX - touchStartX;
+                if (diff > swipeThreshold) { // Swipe Right (Previous)
+                    prevBanner();
+                } else if (diff < -swipeThreshold) { // Swipe Left (Next)
+                    nextBanner();
+                }
+                 // Restart auto-slide only if the swipe didn't trigger navigation (e.g., small movement)
+                 // Or always restart after a short delay if preferred
+                 // resetAutoSlide(); // Restart immediately after any touch end? Maybe too aggressive.
+            }, { passive: true });
+        };
+
+
+        // ========================================================================
+        // --- Room Loading Logic ---
+        // ========================================================================
+
+        const loadRooms = () => {
+            roomsContainer.innerHTML = '<div class="loading-placeholder">جارٍ تحميل الغرف...</div>';
+            const roomsRef = ref(db, 'products'); // Assuming 'products' is the correct path for rooms
+
+            onValue(roomsRef, (snapshot) => {
+                roomsContainer.innerHTML = ''; // Clear previous
+                const rooms = snapshot.val() || {};
+                const roomIds = Object.keys(rooms);
+
+                if (roomIds.length === 0) {
+                    roomsContainer.innerHTML = '<p class="loading-placeholder">لا توجد غرف متاحة حالياً.</p>';
+                    return;
+                }
+
+                let roomsAdded = 0;
+                roomIds.forEach(roomId => {
+                    const roomData = rooms[roomId];
+                    // Basic validation
+                    if (!roomData || !roomData.title || typeof roomData.title !== 'string' || !roomData.image || typeof roomData.image !== 'string') {
+                        console.warn(`Skipping room ${roomId}: Missing/invalid title or image.`);
+                        return;
+                    }
+
+                    roomsAdded++;
+                    const box = document.createElement('div');
+                    box.className = 'room-box';
+                    box.dataset.roomId = roomId;
+                    box.dataset.roomTitle = roomData.title; // Store title for modal
+
+                    // Improved error handling for image
+                    box.innerHTML = `
+                        <div class="room-image-container">
+                            <img src="${roomData.image}" alt="${roomData.title}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<p style=\\'color:red;padding:10px; text-align:center;\\'>صورة غير متوفرة</p>';">
+                        </div>
+                        <h3>${roomData.title}</h3>
+                    `;
+
+                    box.addEventListener('click', () => {
+                        showEntryModal(roomId, roomData.title);
+                    });
+                    roomsContainer.appendChild(box);
+                });
+
+                // Handle case where all rooms were filtered out
+                if (roomsAdded === 0 && roomIds.length > 0) {
+                    roomsContainer.innerHTML = '<p class="loading-placeholder">لا توجد غرف صالحة للعرض حالياً.</p>';
+                }
+
+            }, (error) => {
+                console.error('Error fetching rooms:', error);
+                roomsContainer.innerHTML = '<p class="loading-placeholder" style="color: red;">خطأ في تحميل الغرف.</p>';
+            });
+        };
+
+        // ========================================================================
+        // --- Entry Modal Logic ---
+        // ========================================================================
+
+        const showEntryModal = (roomId, roomTitle) => {
+            entryModalTitle.textContent = `دخول غرفة: ${roomTitle}`;
+            entryForm.dataset.roomId = roomId; // Store IDs on the form itself
+            entryForm.dataset.roomTitle = roomTitle;
+            usernameInput.value = localStorage.getItem('lastUsername') || ''; // Pre-fill last used name
+
+            // Reset selections to default each time modal opens
+            entryForm.querySelector('input[name="avatar"][value="👩‍🦱"]').checked = true;
+            entryForm.querySelector('input[name="bubbleColor"][value="blue"]').checked = true;
+
+            entryModal.style.display = 'block';
+            entryModal.style.animation = 'fadeIn var(--transition-speed-medium) ease-out';
+            entryModal.querySelector('.modal-content').style.animation = 'slideIn var(--transition-speed-slow) ease-out';
+             // Use setTimeout to focus after animation starts, improves UX
+            setTimeout(() => usernameInput.focus(), 50);
+        };
+
+        const hideEntryModal = () => {
+            // Add exit animations
+            entryModal.style.animation = 'fadeOut var(--transition-speed-medium) ease-out forwards';
+            entryModal.querySelector('.modal-content').style.animation = 'slideOut var(--transition-speed-slow) ease-out forwards';
+
+            // Hide after animation completes
+            setTimeout(() => {
+                entryModal.style.display = 'none';
+                // Clear animations to prevent re-playing on next display:block
+                entryModal.style.animation = '';
+                entryModal.querySelector('.modal-content').style.animation = '';
+            }, 450); // Match longest animation duration (slideOut)
+        };
+
+        const handleEntrySubmit = (e) => {
+            e.preventDefault();
+            const name = usernameInput.value.trim();
+            const avatar = entryForm.querySelector('input[name="avatar"]:checked').value;
+            const color = entryForm.querySelector('input[name="bubbleColor"]:checked').value;
+            const roomId = e.target.dataset.roomId;
+            const roomTitle = e.target.dataset.roomTitle;
+
+            // Simple validation
+            if (!name) {
+                alert('الرجاء إدخال اسم مستخدم!'); // Replace with better inline validation if desired
+                usernameInput.focus();
+                return;
+            }
+            // Removed length check, already have maxlength on input
+
+            if (!roomId || !roomTitle) {
+                alert('خطأ: لم يتم تحديد معلومات الغرفة بشكل صحيح.');
+                return;
+            }
+
+            currentUser = { name, avatar, color, currentRoomId: roomId };
+            localStorage.setItem('lastUsername', name); // Remember username
+
+            hideEntryModal();
+            enterChatRoom(roomId, roomTitle);
+        };
+
+        const setupEntryModalListeners = () => {
+            entryForm.addEventListener('submit', handleEntrySubmit);
+            entryModalCloseBtn.addEventListener('click', hideEntryModal);
+            entryModal.addEventListener('click', (e) => {
+                // Close if clicked outside the modal content
+                if (e.target === entryModal) {
+                    hideEntryModal();
+                }
+            });
+        };
+
+        // ========================================================================
+        // --- Chat Page Logic ---
+        // ========================================================================
+
+        const enterChatRoom = (roomId, roomTitle) => {
+            chatRoomTitle.textContent = roomTitle;
+            chatPage.style.display = 'flex';
+            chatPage.style.animation = 'slideInFromBottom var(--transition-speed-slow) ease-out';
+            chatContent.innerHTML = ''; // Clear previous messages
+            addWelcomeMessage(); // Add the welcome message
+            cancelReply(); // Ensure reply state is reset
+            chatInput.value = ''; // Clear input field
+            adjustTextareaHeight(); // Adjust height for placeholder
+            loadMessages(roomId);
+            // Focus input after a short delay for smoother transition
+            setTimeout(() => chatInput.focus(), 100);
+        };
+
+        const leaveChatRoom = () => {
+            chatPage.style.animation = 'slideOutToBottom var(--transition-speed-slow) ease-out forwards';
+
+            setTimeout(() => {
+                chatPage.style.display = 'none';
+                chatPage.style.animation = ''; // Reset animation
+
+                // Detach Firebase listener
+                if (currentMessagesListener) {
+                    currentMessagesListener(); // Call the detach function returned by onValue
+                    currentMessagesListener = null;
+                    console.log("Firebase listener detached for room:", currentUser.currentRoomId);
+                }
+
+                // Reset user state (keep lastUsername in localStorage)
+                currentUser = { name: null, avatar: null, color: null, currentRoomId: null };
+                chatContent.innerHTML = ''; // Clear messages
+                cancelReply(); // Clear reply state
+
+            }, 450); // Match animation duration
+        };
+
+         const addWelcomeMessage = () => {
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.className = 'welcome-message-container';
+            welcomeDiv.innerHTML = `
+                <i class="fas fa-lock"></i>
+                <p>أهلاً بكم في منصة Haawa. يرجى احترام بعضنا البعض والتحدث بطريقة مهذبة.</p>
+            `;
+            chatContent.appendChild(welcomeDiv); // Append instead of prepend maybe? Or check if exists first.
+        };
+
+        const setupChatPageListeners = () => {
+            chatBackButton.addEventListener('click', leaveChatRoom);
+        };
+
+        // ========================================================================
+        // --- Message Loading & Display Logic ---
+        // ========================================================================
+
+        const loadMessages = (roomId) => {
+            const messagesRef = ref(db, `rooms/${roomId}/messages`);
+            const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(60)); // Load slightly more initially
+
+            // Display initial loader
+            chatContent.innerHTML = ''; // Clear everything first
+            addWelcomeMessage(); // Add welcome message back
+            const initialLoader = document.createElement('div');
+            initialLoader.className = 'loading-placeholder initial-load';
+            initialLoader.textContent = 'جارٍ تحميل الرسائل...';
+            chatContent.appendChild(initialLoader);
+
+            // Detach any previous listener before attaching a new one
+            if (currentMessagesListener) {
+                currentMessagesListener();
+                console.log("Detached previous Firebase listener before attaching new one.");
+            }
+
+            // Attach the listener
+            currentMessagesListener = onValue(messagesQuery, (snapshot) => {
+                const loader = chatContent.querySelector('.loading-placeholder.initial-load');
+                if (loader) loader.remove(); // Remove loader once data arrives
+
+                const messagesData = snapshot.val() || {};
+                const messageIds = Object.keys(messagesData);
+
+                // Preserve welcome message if needed, or re-add if cleared
+                const welcomeMsgElement = chatContent.querySelector('.welcome-message-container');
+                chatContent.innerHTML = ''; // Clear previous messages *after* getting data
+                if(welcomeMsgElement) chatContent.appendChild(welcomeMsgElement); // Re-add welcome message
+
+                if (messageIds.length === 0) {
+                    const noMsgPlaceholder = document.createElement('div');
+                    noMsgPlaceholder.className = 'loading-placeholder no-messages';
+                    noMsgPlaceholder.textContent = 'لا توجد رسائل في هذه الغرفة بعد. كن أول من يكتب!';
+                    chatContent.appendChild(noMsgPlaceholder);
+                } else {
+                    // Sort messages by timestamp client-side for robustness
+                    const sortedMessages = messageIds
+                        .map(id => ({ id, ...messagesData[id] }))
+                        .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // Handle potential missing timestamps
+
+                    sortedMessages.forEach(message => {
+                        // Add message only if it's not already in the DOM
+                        // This helps prevent duplicates on minor updates/reloads
+                         if (!chatContent.querySelector(`.message-item[data-message-id="${message.id}"]`)) {
+                            addMessageToChat(message);
+                        }
+                    });
+
+                    // Scroll logic: Immediate if near bottom, smooth otherwise
+                    const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop <= chatContent.clientHeight + 150; // Increased threshold
+                    scrollToBottom(!isNearBottom); // Scroll smoothly unless user scrolled up
+                }
+            }, (error) => {
+                console.error(`Error loading messages for room ${roomId}:`, error);
+                const welcomeMsgElement = chatContent.querySelector('.welcome-message-container');
+                chatContent.innerHTML = ''; // Clear content on error too
+                 if(welcomeMsgElement) chatContent.appendChild(welcomeMsgElement);
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'loading-placeholder';
+                errorMsg.style.color = 'red';
+                errorMsg.textContent = 'حدث خطأ أثناء تحميل الرسائل.';
+                chatContent.appendChild(errorMsg);
+                // Detach listener on error
+                if (currentMessagesListener) {
+                    currentMessagesListener();
+                    currentMessagesListener = null;
+                }
+            });
+
+            console.log("Firebase listener attached for room:", roomId);
+        };
+
+
+        const addMessageToChat = (message) => {
+            // Basic validation
+            if (!message || !message.sender || !message.text || !message.id || !message.timestamp) {
+                console.warn("Skipping incomplete message:", message);
+                return;
+            }
+
+            // Check if message already exists to prevent duplicates
+            if (chatContent.querySelector(`.message-item[data-message-id="${message.id}"]`)) {
+                console.log("Skipping duplicate message:", message.id);
+                return;
+            }
+
+
+            const isSentByUser = message.sender === currentUser.name;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message-item ${isSentByUser ? 'sent' : 'received'}`;
+            messageDiv.dataset.messageId = message.id;
+            messageDiv.dataset.sender = message.sender;
+            messageDiv.dataset.text = message.text; // Store original text for actions
+
+            // Avatar
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'message-avatar';
+            avatarDiv.textContent = message.avatar || '👤'; // Use message avatar or fallback
+
+            // Bubble
+            const bubbleDiv = document.createElement('div');
+            const userColor = isSentByUser ? (message.color || 'default') : 'default'; // Received uses default style
+            const bubbleColorClass = isSentByUser ? `bubble-${userColor}` : '';
+            bubbleDiv.className = `message-bubble ${bubbleColorClass}`;
+
+            // Reply Context (if present)
+            if (message.replyTo && message.replyTo.sender && message.replyTo.text) {
+                const replyContextDiv = document.createElement('div');
+                replyContextDiv.className = 'reply-context-display';
+                // Use sanitized text from replyTo object
+                 // Make sure sender/text exists before trying to access
+                 const replySender = message.replyTo.sender || "مستخدم";
+                 const replyText = message.replyTo.text || "...";
+                 replyContextDiv.innerHTML = `رد على <strong>${escapeHtml(replySender)}</strong>: ${escapeHtml(replyText)}`;
+                 bubbleDiv.appendChild(replyContextDiv);
+            }
+
+            // Sender Name (for received messages)
+            if (!isSentByUser) {
+                const senderDiv = document.createElement('div');
+                senderDiv.className = 'message-sender';
+                senderDiv.textContent = escapeHtml(message.sender); // Sanitize sender name
+                bubbleDiv.appendChild(senderDiv);
+            }
+
+            // Message Text
+            const textDiv = document.createElement('div');
+            textDiv.className = 'message-text';
+            textDiv.textContent = message.text; // Assume text is already sanitized before storing/sending
+            bubbleDiv.appendChild(textDiv);
+
+            // Time
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = formatTime(message.timestamp);
+            bubbleDiv.appendChild(timeDiv);
+
+            // Assemble Element
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(bubbleDiv);
+
+            // Add interaction listeners (swipe/long-press/contextmenu)
+            addMessageInteractionListeners(messageDiv);
+
+            // Append to chat
+            chatContent.appendChild(messageDiv);
+
+            // Remove "no messages" placeholder if it exists
+            const noMsgPlaceholder = chatContent.querySelector('.loading-placeholder.no-messages');
+            if (noMsgPlaceholder) {
+                noMsgPlaceholder.remove();
+            }
+        };
+
+        // ========================================================================
+        // --- Message Interaction Logic (Swipe, Long Press, Delete) ---
+        // ========================================================================
+
+        const addMessageInteractionListeners = (messageElement) => {
+             const messageId = messageElement.dataset.messageId;
+             const sender = messageElement.dataset.sender;
+             const text = messageElement.dataset.text;
+             const isSentMessage = messageElement.classList.contains('sent');
+
+             let touchStartTime = 0; // To differentiate tap from long press/swipe
+
+            // --- Touch Start ---
+            messageElement.addEventListener('touchstart', (e) => {
+                 // Ignore multi-touch gestures
+                 if (e.touches.length > 1) return;
+
+                swipeStartX = e.touches[0].clientX;
+                swipeStartY = e.touches[0].clientY;
+                swipeCurrentX = swipeStartX; // Initialize
+                isSwiping = false; // Reset swipe flag
+                touchStartTime = Date.now(); // Record start time
+
+                // Apply faster transition for immediate feedback during interaction
+                messageElement.style.transition = 'transform 0.1s ease-out';
+
+                // Clear previous long press timer
+                clearTimeout(longPressTimer);
+
+                // Start long press timer *only* for sent messages
+                if (isSentMessage) {
+                    longPressTimer = setTimeout(() => {
+                        isSwiping = true; // Prevent swipe/tap after long press triggers
+                        if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback
+                        showDeleteConfirmation(messageId);
+                         // Reset visual state if user moves finger *after* long press triggered
+                         messageElement.style.transform = 'translateX(0)';
+                         messageElement.classList.remove('swiping');
+                    }, longPressDuration);
+                }
+             }, { passive: true }); // Passive where possible
+
+             // --- Touch Move ---
+             messageElement.addEventListener('touchmove', (e) => {
+                 // Ignore multi-touch or if long press already triggered
+                 if (e.touches.length > 1 || (longPressTimer && !isSentMessage && Date.now() - touchStartTime > longPressDuration) || (isSentMessage && !longPressTimer) ) return;
+
+
+                 swipeCurrentX = e.touches[0].clientX;
+                 const touchCurrentY = e.touches[0].clientY;
+                 const deltaX = swipeCurrentX - swipeStartX;
+                 const deltaY = touchCurrentY - swipeStartY;
+
+                 // Prioritize vertical scroll: If vertical move > horizontal move, cancel swipe/long press
+                 if (Math.abs(deltaY) > Math.abs(deltaX) + 10) {
+                     clearTimeout(longPressTimer);
+                     if (isSwiping) { // Reset visual swipe if it started
+                         messageElement.style.transform = 'translateX(0)';
+                         messageElement.classList.remove('swiping');
+                         isSwiping = false;
+                     }
+                     return; // Exit, allow native scroll
+                 }
+
+                 // If significant horizontal movement, cancel long press and activate swipe mode
+                 if (Math.abs(deltaX) > 10) {
+                     clearTimeout(longPressTimer);
+                     if (!isSwiping) {
+                         isSwiping = true;
+                         messageElement.classList.add('swiping'); // Add class for potential styling
+                     }
+                 }
+
+                 // Apply visual translation for swipe (only swipe left for reply)
+                 if (isSwiping && deltaX < 0) { // Swiping left
+                     const translateValue = Math.max(deltaX, -swipeThreshold * 1.8); // Cap visual swipe distance
+                     messageElement.style.transform = `translateX(${translateValue}px)`;
+                     // Prevent default scroll ONLY when actively swiping horizontally left
+                     e.preventDefault();
+                 } else if (isSwiping && deltaX >= 0) { // Swiping right (resetting or no action)
+                     // Allow moving back right smoothly, but don't go past original position
+                     messageElement.style.transform = `translateX(0px)`;
+                 }
+
+             }, { passive: false }); // Need false to preventDefault during horizontal swipe
+
+            // --- Touch End ---
+            messageElement.addEventListener('touchend', (e) => {
+                // Ignore if multi-touch was involved
+                if (e.touches.length > 0 || e.changedTouches.length > 1) {
+                     // If multi-touch ends, ensure state is reset
+                     clearTimeout(longPressTimer);
                      messageElement.style.transform = 'translateX(0)';
                      messageElement.classList.remove('swiping');
                      isSwiping = false;
+                     return;
                  }
-                 return; // Do nothing more if it's a scroll
-             }
 
+                clearTimeout(longPressTimer); // Always clear timer
 
-            // Clear long press timer if finger moves significantly
-            if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
-                clearTimeout(longPressTimer);
+                if (isSwiping) {
+                    messageElement.classList.remove('swiping');
+                    const deltaX = swipeCurrentX - swipeStartX;
+
+                    // Check if swipe was far enough left to trigger reply
+                    if (deltaX < -swipeThreshold) {
+                        startReply(messageId, sender, text);
+                        if (navigator.vibrate) navigator.vibrate([30, 50, 30]); // Double tap vibration
+                    }
+                    // Animate back smoothly regardless of action triggered
+                    messageElement.style.transition = 'transform 0.25s ease-out'; // Slightly slower, smoother return
+                    messageElement.style.transform = 'translateX(0)';
+
+                } else {
+                    // If not swiping (tap or short press), ensure position is reset
+                    // This might have already been handled, but safe to ensure
+                    messageElement.style.transform = 'translateX(0)';
+                }
+
+                // Reset state variables
+                swipeStartX = 0;
+                swipeStartY = 0;
+                swipeCurrentX = 0;
+                isSwiping = false;
+                touchStartTime = 0;
+
+                // Remove inline transition after animation finishes
+                 setTimeout(() => {
+                    messageElement.style.transition = '';
+                }, 250); // Match return animation duration
+
+            });
+
+            // --- Context Menu for Desktop (Delete Sent Messages) ---
+            if (isSentMessage) {
+                messageElement.addEventListener('contextmenu', (e) => {
+                    e.preventDefault(); // Prevent default browser context menu
+                    showDeleteConfirmation(messageId);
+                });
+            }
+        };
+
+        const showDeleteConfirmation = (messageId) => {
+            messageToDeleteId = messageId;
+            deleteConfirmationDialog.style.display = 'flex';
+            deleteConfirmationDialog.style.animation = 'fadeIn var(--transition-speed-fast) ease';
+            deleteConfirmationDialog.querySelector('.confirmation-box').style.animation = 'slideIn var(--transition-speed-medium) ease-out';
+        };
+
+        const hideDeleteConfirmation = () => {
+            deleteConfirmationDialog.style.animation = 'fadeOut var(--transition-speed-fast) ease forwards';
+            deleteConfirmationDialog.querySelector('.confirmation-box').style.animation = 'slideOut var(--transition-speed-medium) ease-out forwards';
+            setTimeout(() => {
+                deleteConfirmationDialog.style.display = 'none';
+                messageToDeleteId = null;
+                // Reset animations
+                deleteConfirmationDialog.style.animation = '';
+                deleteConfirmationDialog.querySelector('.confirmation-box').style.animation = '';
+            }, 300); // Match animation duration
+        };
+
+        const handleDeleteConfirm = () => {
+            if (!messageToDeleteId || !currentUser.currentRoomId) {
+                console.error("Delete Error: Missing message ID or Room ID.");
+                hideDeleteConfirmation();
+                return;
             }
 
-             // --- Swipe Left Logic (for Reply) ---
-             // Only allow swipe left (negative deltaX) for reply
-             if (deltaX < -10) { // Start swiping left
-                 isSwiping = true;
-                 messageElement.classList.add('swiping');
-                 // Move element visually, capped at a certain distance
-                 const translateValue = Math.max(deltaX, -swipeThreshold * 1.5); // Cap the visual swipe
-                 messageElement.style.transform = `translateX(${translateValue}px)`;
-             } else if (deltaX > 0 && isSwiping) { // Moving back to right while swiping
-                const translateValue = Math.max(deltaX - swipeThreshold * 1.5, -swipeThreshold * 1.5);
-                messageElement.style.transform = `translateX(${translateValue}px)`;
-             } else {
-                 // Reset if swiping right or not enough movement
-                 messageElement.style.transform = 'translateX(0)';
-             }
-
-
-        }, { passive: false }); // Need false to potentially prevent default on horizontal swipe? Test this.
-
-        // --- Touch End ---
-        messageElement.addEventListener('touchend', (e) => {
-            clearTimeout(longPressTimer); // Always clear timer on touchend
-
-            const deltaX = touchEndX - touchStartX;
-
-             if (isSwiping) {
-                 messageElement.classList.remove('swiping');
-                  // Check if swipe was enough to trigger reply (swipe left)
-                  if (deltaX < -swipeThreshold) {
-                      // --- Trigger Reply Action ---
-                      startReply(messageId, sender, text);
-                      // Vibrate feedback (optional)
-                      if (navigator.vibrate) navigator.vibrate(30);
-                      // Animate back smoothly after short delay
-                      setTimeout(() => { messageElement.style.transform = 'translateX(0)'; }, 50);
-                  } else {
-                      // Not enough swipe, animate back
-                      messageElement.style.transform = 'translateX(0)';
-                  }
-             } else {
-                 // If not swiping (i.e., likely a tap or very short drag), ensure position is reset
-                 messageElement.style.transform = 'translateX(0)';
-             }
-
-            // Reset state
-            touchStartX = 0;
-            touchEndX = 0;
-            touchStartY = 0;
-            isSwiping = false;
-            // Ensure transition is reset for normal operations
-             setTimeout(() => { messageElement.style.transition = ''; }, 100);
-
-        });
-    };
-
-    // --- Reply Handling ---
-    const startReply = (messageId, sender, text) => {
-        replyToMessage = { id: messageId, sender: sender, text: text };
-        replyPreviewSender.textContent = sender;
-        replyPreviewContent.textContent = text.substring(0, 50) + (text.length > 50 ? '...' : ''); // Show snippet
-        replyPreview.style.display = 'block';
-        chatInput.focus();
-    };
-
-    const cancelReply = () => {
-        replyToMessage = null;
-        replyPreview.style.display = 'none';
-        replyPreviewSender.textContent = '';
-        replyPreviewContent.textContent = '';
-    };
-
-    cancelReplyBtn.addEventListener('click', cancelReply);
-
-    // --- Delete Handling ---
-    let messageToDeleteId = null;
-
-    const showDeleteConfirmation = (messageId) => {
-        messageToDeleteId = messageId;
-        deleteConfirmationDialog.style.display = 'flex';
-    };
-
-    const hideDeleteConfirmation = () => {
-        messageToDeleteId = null;
-        deleteConfirmationDialog.style.display = 'none';
-    };
-
-    confirmDeleteBtn.addEventListener('click', () => {
-        if (messageToDeleteId && currentUser.currentRoomId) {
             const messageRef = ref(db, `rooms/${currentUser.currentRoomId}/messages/${messageToDeleteId}`);
             remove(messageRef)
                 .then(() => {
-                    console.log("Message deleted successfully:", messageToDeleteId);
-                    hideDeleteConfirmation();
-                    // Message removal from UI handled by the onValue listener
+                    console.log("Message deleted:", messageToDeleteId);
+                    // UI update happens via the onValue listener detecting the removal
                 })
                 .catch((error) => {
                     console.error("Error deleting message:", error);
                     alert("خطأ في حذف الرسالة.");
-                    hideDeleteConfirmation();
+                })
+                .finally(() => {
+                    hideDeleteConfirmation(); // Always close dialog
                 });
-        } else {
-             console.error("Cannot delete: Missing message ID or Room ID");
-              hideDeleteConfirmation();
-        }
-    });
-
-    cancelDeleteBtn.addEventListener('click', hideDeleteConfirmation);
-    // Close dialog if clicking outside the box
-     deleteConfirmationDialog.addEventListener('click', (e) => {
-        if (e.target === deleteConfirmationDialog) {
-            hideDeleteConfirmation();
-        }
-    });
-
-
-    // --- Send Message ---
-    const sendMessage = () => {
-        const messageText = chatInput.value.trim();
-        if (messageText === '' || !currentUser.currentRoomId || !currentUser.name) return;
-
-        const roomId = currentUser.currentRoomId;
-        const messagesRef = ref(db, `rooms/${roomId}/messages`);
-        const newMessageRef = push(messagesRef);
-
-        const newMessage = {
-            sender: currentUser.name,
-            avatar: currentUser.avatar,
-            color: currentUser.color,
-            text: messageText,
-            timestamp: serverTimestamp()
         };
 
-        // Add reply context if present
-        if (replyToMessage) {
-            newMessage.replyTo = {
-                 // Store only essential info to avoid bloating DB
-                id: replyToMessage.id,
-                sender: replyToMessage.sender,
-                text: replyToMessage.text.substring(0, 50) + (replyToMessage.text.length > 50 ? '...' : '') // Store snippet
-            };
-        }
-
-        set(newMessageRef, newMessage)
-            .then(() => {
-                chatInput.value = '';
-                adjustTextareaHeight();
-                cancelReply(); // Clear reply state after sending
-                scrollToBottom();
-            })
-            .catch((error) => {
-                console.error('Error sending message:', error);
-                alert('حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.');
+        const setupDeleteConfirmationListeners = () => {
+            confirmDeleteBtn.addEventListener('click', handleDeleteConfirm);
+            cancelDeleteBtn.addEventListener('click', hideDeleteConfirmation);
+             // Close dialog if clicking overlay background
+            deleteConfirmationDialog.addEventListener('click', (e) => {
+                if (e.target === deleteConfirmationDialog) {
+                    hideDeleteConfirmation();
+                }
             });
-    };
+        };
 
-    // --- Utility Functions ---
-    const formatTime = (timestamp) => {
-        if (!timestamp) return '';
-        try {
-            const date = new Date(timestamp);
-            if (isNaN(date.getTime())) { return "---"; }
-            return date.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit', hour12: true });
-        } catch (e) {
-            console.error("Error formatting time:", e, "Timestamp:", timestamp);
-            return "---";
+        // ========================================================================
+        // --- Message Sending & Reply Logic ---
+        // ========================================================================
+
+        const startReply = (messageId, sender, text) => {
+            // Create a snippet, max ~50 chars
+            const snippet = text.length > 50 ? text.substring(0, 50) + '...' : text;
+            replyToMessage = { id: messageId, sender: sender, text: snippet }; // Store snippet
+
+            replyPreviewSender.textContent = escapeHtml(sender); // Display sanitized sender
+            replyPreviewContent.textContent = escapeHtml(snippet); // Display sanitized snippet
+            replyPreview.style.display = 'block';
+            chatInput.focus();
+        };
+
+        const cancelReply = () => {
+            replyToMessage = null;
+            replyPreview.style.display = 'none';
+            replyPreviewSender.textContent = '';
+            replyPreviewContent.textContent = '';
+        };
+
+        const sendMessage = () => {
+            const messageText = chatInput.value.trim();
+            if (messageText === '' || !currentUser.currentRoomId || !currentUser.name) return;
+
+            // Basic length validation
+            if (messageText.length > 1000) {
+                alert("الرسالة طويلة جداً (الحد الأقصى 1000 حرف).");
+                return;
+            }
+
+            const roomId = currentUser.currentRoomId;
+            const messagesRef = ref(db, `rooms/${roomId}/messages`);
+            const newMessageRef = push(messagesRef); // Generate unique ID first
+
+            // Prepare message data (basic sanitization)
+            const sanitizedText = escapeHtml(messageText); // Sanitize text before sending
+
+            const newMessageData = {
+                sender: currentUser.name, // Assume name is safe (set on entry)
+                avatar: currentUser.avatar, // Assume safe (emoji)
+                color: currentUser.color, // Assume safe (predefined value)
+                text: sanitizedText, // Use sanitized text
+                timestamp: serverTimestamp(), // Use Firebase server time
+                id: newMessageRef.key // Include the message's own ID
+            };
+
+            // Add reply context if active
+            if (replyToMessage) {
+                // Use the already sanitized snippet stored in replyToMessage
+                 newMessageData.replyTo = {
+                    id: replyToMessage.id,
+                    sender: replyToMessage.sender, // Already sanitized when stored
+                    text: replyToMessage.text // Already sanitized snippet when stored
+                };
+            }
+
+            // Send to Firebase
+            set(newMessageRef, newMessageData)
+                .then(() => {
+                    chatInput.value = ''; // Clear input
+                    adjustTextareaHeight(); // Reset height
+                    cancelReply(); // Clear reply state
+                    scrollToBottom(true); // Scroll down immediately after sending
+                })
+                .catch((error) => {
+                    console.error('Error sending message:', error);
+                    alert('حدث خطأ أثناء إرسال الرسالة.');
+                });
+        };
+
+        const setupMessageInputListeners = () => {
+            sendButton.addEventListener('click', sendMessage);
+            cancelReplyBtn.addEventListener('click', cancelReply);
+
+            chatInput.addEventListener('keydown', (e) => {
+                // Send on Enter (not Shift+Enter)
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); // Prevent newline
+                    sendMessage();
+                }
+                // Cancel reply with Escape key
+                if (e.key === 'Escape' && replyToMessage) {
+                    cancelReply();
+                }
+            });
+
+            // Auto-resize textarea
+            chatInput.addEventListener('input', adjustTextareaHeight);
+        };
+
+        // ========================================================================
+        // --- Utility Functions ---
+        // ========================================================================
+
+        // Simple HTML escaping function
+        const escapeHtml = (unsafe) => {
+            if (!unsafe) return ""; // Handle null/undefined input
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
         }
-    };
 
-    const adjustTextareaHeight = () => {
-      chatInput.style.height = 'auto';
-      chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
-       // Adjust padding of the container based on input height - optional visual improvement
-       chatInputArea.style.paddingBottom = `${12 + (chatInput.offsetHeight - 20)}px`; // Base padding + extra height
-    };
+        // Format timestamp to HH:MM AM/PM
+        const formatTime = (timestamp) => {
+            if (!timestamp || typeof timestamp !== 'number') return '...';
+            try {
+                const date = new Date(timestamp);
+                if (isNaN(date.getTime())) return "---"; // Invalid Date check
+                return date.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit', hour12: true });
+            } catch (e) {
+                console.error("Error formatting time:", e, "Timestamp:", timestamp);
+                return "---";
+            }
+        };
 
-    const scrollToBottom = (immediate = false) => {
-        if (immediate) {
-            chatContent.scrollTop = chatContent.scrollHeight;
-        } else {
-             setTimeout(() => {
-                chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
-             }, 50); // Delay allows DOM to update for smooth scroll
-        }
-    };
+        // Adjust textarea height dynamically
+        const adjustTextareaHeight = () => {
+            chatInput.style.height = 'auto'; // Reset height
+            const scrollHeight = chatInput.scrollHeight;
+            const maxHeight = 100; // Max height in pixels
+            chatInput.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+            // Optional: Add scrollbar visibility styling if needed when max height is reached
+            chatInput.style.overflowY = scrollHeight > maxHeight ? 'scroll' : 'hidden';
+        };
 
+        // Scroll chat content to the bottom
+        const scrollToBottom = (smooth = true) => {
+            const behavior = smooth ? 'smooth' : 'instant';
+            // Use a small timeout even for smooth to ensure DOM updates are rendered
+            setTimeout(() => {
+                chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: behavior });
+            }, smooth ? 50 : 0);
+        };
 
-    // --- Event Listeners ---
-    bannerControls.addEventListener('click', (e) => {
-      if (e.target.classList.contains('banner-dot')) {
-        goToBanner(parseInt(e.target.dataset.index, 10));
-      }
-    });
-    document.querySelector('.banner-next').addEventListener('click', nextBanner);
-    document.querySelector('.banner-prev').addEventListener('click', prevBanner);
+        // ========================================================================
+        // --- Initialization ---
+        // ========================================================================
 
-    chatBackButton.addEventListener('click', leaveChatRoom);
-    sendButton.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-       // Allow cancelling reply with Escape key
-        if (e.key === 'Escape' && replyToMessage) {
-            cancelReply();
-        }
-    });
-    chatInput.addEventListener('input', adjustTextareaHeight);
+        const initializeAppUI = () => {
+            console.log("Initializing App UI...");
+            setupSidebarListeners();
+            setupBannerListeners();
+            setupEntryModalListeners();
+            setupChatPageListeners();
+            setupMessageInputListeners();
+            setupDeleteConfirmationListeners();
 
-    // Touch events for banners
-    let bannerTouchStartX = 0;
-    const bannersEl = document.getElementById('bannersCarousel');
-    bannersEl.addEventListener('touchstart', (e) => {
-      bannerTouchStartX = e.touches[0].clientX;
-      clearInterval(autoSlideInterval);
-    }, { passive: true });
-    bannersEl.addEventListener('touchend', (e) => {
-      const touchEndX = e.changedTouches[0].clientX;
-      const diff = touchEndX - bannerTouchStartX;
-      if (diff > 50) { prevBanner(); }
-      else if (diff < -50) { nextBanner(); }
-      resetAutoSlide(); // Always reset timer after interaction
-    }, { passive: true });
+            loadBanners();
+            loadRooms();
+            adjustTextareaHeight(); // Initial adjustment for placeholder
+            console.log("App UI Initialized.");
+        };
 
+        // --- Start the application ---
+        window.addEventListener('load', initializeAppUI);
 
-    // --- Initial Load ---
-    window.addEventListener('load', () => {
-      loadBanners();
-      loadRooms();
-      adjustTextareaHeight();
-    });
-
-  </script>
+    </script>
 </body>
 </html>
